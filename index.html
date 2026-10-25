@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Рубеж / Четыре сектора</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="hud">
+      <button id="pause" class="icon-button pause" aria-label="Пауза" title="Пауза · Пробел">
+        <svg viewBox="0 0 32 32"><path d="M6 4h7v24H6zm13 0h7v24h-7z" /></svg>
+      </button>
+      <div class="readout" title="Волна">
+        <svg viewBox="0 0 32 32">
+          <path d="m3 6 8 4 10-4 8 4v5l-8-4-10 4-8-4zm0 13 8 4 10-4 8 4v5l-8-4-10 4-8-4z" /></svg
+        ><strong id="wave">0</strong><small>/ 40</small>
+      </div>
+      <div class="readout health" title="Здоровье ядра">
+        <svg viewBox="0 0 32 32"><path d="m16 29-13-14V7l7-4 6 5 6-5 7 4v8z" /></svg
+        ><strong id="hp">20</strong>
+      </div>
+      <div class="readout coins" title="Монеты">
+        <svg viewBox="0 0 32 32">
+          <path d="m8 3 17 2 5 15-12 11L3 22 2 10z" />
+          <path class="coin-inner" d="m10 8 11 1 4 10-8 7-10-6-1-8z" /></svg
+        ><strong id="money">130</strong>
+      </div>
+    </header>
+    <div class="top-right">
+      <button id="chooseLevel" class="corner-button" title="Выбрать карту">Карты</button>
+      <button id="admin" class="corner-button" title="Панель тестирования">Админ</button>
+      <button
+        class="icon-button active"
+        id="music"
+        title="Музыка"
+        aria-label="Музыка"
+        aria-pressed="true"
+      >
+        <svg viewBox="0 0 32 32">
+          <path d="M12 5v17a5 5 0 1 1-3-4V8l18-4v16a5 5 0 1 1-3-4V2z" />
+        </svg></button
+      ><button
+        class="icon-button active"
+        id="sfx"
+        title="Звуки"
+        aria-label="Звуки"
+        aria-pressed="true"
+      >
+        <svg viewBox="0 0 32 32">
+          <path d="M3 12h6l9-8v24l-9-8H3z" />
+          <path
+            d="M23 9q10 7 0 14m-2-10q4 3 0 6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          />
+        </svg>
+      </button>
+    </div>
+    <div id="bossBar" class="boss-bar" aria-live="polite">
+      <div class="boss-title">
+        <strong id="bossName">КРИСТАЛЛИКС</strong><span id="bossPhase">КРИСТАЛЛИЧЕСКАЯ СЕТКА</span>
+      </div>
+      <div class="boss-meter shield"><i id="bossShieldFill"></i></div>
+      <div class="boss-values"><span id="bossShieldText"></span><span id="bossHPText"></span></div>
+      <div class="boss-meter health"><i id="bossHPFill"></i></div>
+      <div class="boss-meter cosmic hidden" id="bossThird"><i id="bossThirdFill"></i></div>
+    </div>
+    <main id="playfield">
+      <canvas
+        id="game"
+        width="1792"
+        height="1120"
+        tabindex="0"
+        aria-label="Поле. Нажмите платформу, чтобы построить башню. Портал слева, ядро справа."
+      ></canvas>
+    </main>
+    <aside
+      id="effectPanel"
+      class="effect-panel"
+      aria-label="Эффективность башни"
+      aria-hidden="true"
+      inert
+    ></aside>
+    <aside id="panel" class="panel" aria-hidden="true"></aside>
+    <footer>
+      <div class="wave-control">
+        <button class="start-button" id="start">
+          <svg viewBox="0 0 24 24"><path d="M5 2v20l17-10z" /></svg>Начать
+        </button>
+        <div id="waveInfo" class="wave-info hidden">
+          <b id="boardState">ПОДГОТОВКА</b
+          ><span id="status">Расставьте башни и начните первую волну.</span>
+          <div class="wave-track"><i id="waveProgress"></i></div>
+        </div>
+      </div>
+      <div class="camera-controls" aria-label="Камера">
+        <button id="zoomOut" title="Отдалить">−</button><span id="zoomValue">100%</span
+        ><button id="zoomIn" title="Приблизить">+</button
+        ><button id="cameraReset" title="Вся карта · F" aria-label="Сбросить камеру">
+          <svg viewBox="0 0 24 24">
+            <path d="M2 9V2h7v2H4v5zm13-7h7v7h-2V4h-5zM2 15h2v5h5v2H2zm18 0h2v7h-7v-2h5z" />
+          </svg>
+        </button>
+      </div>
+      <div class="speed">
+        <button data-speed="1" class="active">1×</button><button data-speed="2">2×</button
+        ><button data-speed="3">3×</button>
+      </div>
+    </footer>
+    <div id="toast" class="toast" role="status"></div>
+    <dialog id="portalModal">
+      <div class="modal-head">
+        <h2>Портал / Волны</h2>
+        <button class="close" data-close="portalModal" aria-label="Закрыть">×</button>
+      </div>
+      <p>Каждый прорвавшийся враг отнимает 1 HP. В таблице: количество × здоровье.</p>
+      <div class="enemy-guide">
+        <span><i class="enemy normal"></i>Обычный · скорость 58 · защита 5%</span
+        ><span><i class="enemy fast"></i>Быстрый · скорость 98 · защита 0%</span
+        ><span><i class="enemy tank"></i>Танк · скорость 34 · защита 25%</span>
+      </div>
+      <p class="special-guide">
+        С 5-й волны: Саунд — защита 12, скорость 52, звуковое оглушение на 1,1 с. С 8-й: Боец —
+        защита 70, скорость 40–112, ускоряется от полученного урона.
+      </p>
+      <p class="new-enemy-guide">
+        <b>Новые противники:</b> с 6-й — Медик (лечение 5% каждые 4 с); с 10-й — Страж (+12 защиты
+        союзникам рядом); с 13-й — Спринтер (рывок ×1,9); с 17-й — Делитель (2 осколка при гибели);
+        с 22-й — Глушитель (перезарядка башен ×1,45). Подробности — при выборе врага.
+      </p>
+      <div class="boss-brief">
+        <b>40-я волна · Кристалликс</b>
+        <p>
+          Сетка: 16000 HP, защита 60%. Затем: 22000 HP, защита 30%. Луч кристаллизует две башни в
+          радиусе 5,7 клетки: опаснейшую и ближайшую из остальных. Интервал 10 с; после разрушения
+          сетки — 8 с. Призыв: 3 миньона раз в 10 с, во второй фазе — 4 раз в 8 с. Миньон: 1200 HP,
+          скорость 88, защита 22%; не более 16 одновременно. Замедление босса ограничено 25%,
+          заморозка — 0,5 с с иммунитетом 6 с; снятие защиты — максимум 12 п.п. Заморозка не
+          останавливает таймеры способностей. Кристаллизованные башни нельзя улучшить или продать;
+          после гибели босса они освобождаются.
+        </p>
+        <p>
+          Кристалликса необходимо уничтожить до ядра — иначе уровень проигран. Миньоны и обычные
+          враги снимают по 1 HP.
+        </p>
+      </div>
+      <div class="wave-scroll">
+        <table class="wave-table">
+          <thead>
+            <tr>
+              <th>Волна</th>
+              <th>Обычный</th>
+              <th>Быстрый</th>
+              <th>Танк</th>
+              <th>Саунд</th>
+              <th>Боец</th>
+              <th>Бонус</th>
+            </tr>
+          </thead>
+          <tbody id="waveRows"></tbody>
+        </table>
+      </div>
+    </dialog>
+    <dialog id="levelModal" class="level-modal">
+      <div class="sector-heading">
+        <div>
+          <div class="eyebrow">ВЫБЕРИТЕ СЕКТОР</div>
+          <h1>Четыре рубежа</h1>
+          <p>Новая карта. Свой ритм. Своя угроза.</p>
+        </div>
+        <button class="close" id="closeLevels" aria-label="Назад к игре">×</button>
+      </div>
+      <div id="levelCards" class="level-cards"></div>
+      <div class="sector-footer">
+        <span>40 волн · 16 башен · 130 монет на старте</span
+        ><span>Платформа → башня · колесо — масштаб · пробел — пауза</span>
+      </div>
+    </dialog>
+    <dialog id="adminModal" class="admin-modal">
+      <div class="modal-head">
+        <div>
+          <div class="eyebrow">ПЕСОЧНИЦА</div>
+          <h2>Панель тестирования</h2>
+        </div>
+        <button class="close" data-close="adminModal" aria-label="Закрыть">×</button>
+      </div>
+      <p class="admin-note">
+        Бой на паузе, пока панель открыта. Применение команд помечает текущий забег как тестовый.
+      </p>
+      <div class="admin-resources">
+        <label
+          >Золото<input id="adminGold" type="number" min="0" max="10000000" value="1000" /></label
+        ><button id="giveGold">Добавить</button
+        ><label>Жизни<input id="adminLives" type="number" min="1" max="100000" value="20" /></label
+        ><button id="giveLives">Добавить</button>
+      </div>
+      <div class="admin-wave">
+        <label>Волна<input id="adminWave" type="number" min="1" max="40" value="40" /></label
+        ><button id="goWave">Перейти и начать</button
+        ><small>Враги и эффекты очищаются. Башни и монеты сохраняются.</small>
+      </div>
+      <h3>Создать противника</h3>
+      <div class="spawn-grid">
+        <label class="wide">Тип<select id="spawnType"></select></label
+        ><label>Количество<input id="spawnCount" type="number" min="1" max="30" value="1" /></label
+        ><label
+          >Здоровье<input id="spawnHP" type="number" min="1" max="10000000" value="1000" /></label
+        ><label>Скорость<input id="spawnSpeed" type="number" min="0" max="1000" value="50" /></label
+        ><label>Защита<input id="spawnArmor" type="number" min="0" max="95" value="20" /></label
+        ><label>Щит<input id="spawnShield" type="number" min="0" max="10000000" value="0" /></label
+        ><label
+          >Награда<input id="spawnReward" type="number" min="0" max="1000000" value="10" /></label
+        ><label
+          >Позиция на пути, %<input id="spawnPosition" type="number" min="0" max="90" value="0"
+        /></label>
+      </div>
+      <div class="admin-bottom">
+        <button id="spawnCustom" class="start-button">Создать</button
+        ><button id="clearEnemies">Очистить врагов</button
+        ><span id="adminMessage" role="status"></span>
+      </div>
+    </dialog>
+    <div id="testBadge" class="test-badge hidden">ТЕСТОВЫЙ ЗАБЕГ</div>
+    <dialog id="endModal">
+      <div class="eyebrow" id="endLabel">КОНТУР ЗАЩИЩЁН</div>
+      <h2 id="endTitle">Сектор очищен.</h2>
+      <p id="endText"></p>
+      <div class="end-score">
+        <div><b id="endWaves">40</b><small>волн</small></div>
+        <div><b id="endKills">0</b><small>уничтожено</small></div>
+        <div><b id="endHP">20</b><small>HP ядра</small></div>
+      </div>
+      <div class="modal-actions">
+        <button id="restart" class="start-button">Заново</button
+        ><button id="endMaps">Выбрать карту</button
+        ><button data-close="endModal">Посмотреть поле</button>
+      </div>
+    </dialog>
+    <script src="audio.js"></script>
+    <script src="sprites.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>
