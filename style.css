@@ -1370,3 +1370,41 @@ dialog p {
     font-size: 30px;
   }
 }
+
+/* Fifth sector: compact five-card chooser, no soundtrack metadata. */
+.level-modal {
+  width: min(1320px, calc(100vw - 48px));
+  padding: 24px;
+}
+.level-cards {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.level-card {
+  padding: 13px;
+}
+.level-card h2 {
+  font-size: 19px;
+  min-height: 46px;
+}
+.level-card p {
+  font-size: 11px;
+  min-height: 70px;
+  margin-bottom: 12px;
+}
+.sector-heading {
+  margin-bottom: 18px;
+}
+.sector-heading h1 {
+  font-size: 32px;
+}
+.sector-enter {
+  margin-top: 16px;
+}
+.sector-footer {
+  margin-top: 18px;
+}
+.tower-list {
+  max-height: calc(100vh - 235px);
+  overflow-y: auto;
+}

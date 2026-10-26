@@ -132,7 +132,16 @@
     ["M23 25 32 20 41 25 39 39 34 44H30L25 39Z", "#e77a87"],
     ["M25 28H30V33H25ZM34 28H39V33H34ZM30 37 32 33 34 37Z", "#24111c"],
   ];
+  shapes.aer = [
+    ["M16 4H48L61 22V48L47 61H17L3 48V22Z", "#174b70"],
+    ["M16 4H48L42 12H22L11 25 3 22Z", "#6ed6ff"],
+    ["M22 12H42L51 28 43 49H21L13 28Z", "#388ab3"],
+    ["M24 8H30V37H24ZM35 8H41V37H35Z", "#b6f4ff"],
+    ["M21 38H44L39 51H26Z", "#82dcff"],
+    ["M27 39H38V45H27Z", "#e1fbff"],
+  ];
   const moduleGlyph = {
+    aer: "M-4-6V5M4-6V5M-6 0H6",
     summon: "M-5 3-3-4 0-6 3-4 5 3 0 6ZM-2-1H2",
     basic: "M-4-4H4V4H-4Z",
     sniper: "M0-6V6M-6 0H6",
@@ -153,6 +162,13 @@
   // Physical attachments in each tower's own material palette. Index matches MODULES.
   // These are integrated barrels, blades, reservoirs and emitters, not UI badges.
   const attachments = {
+    aer: [
+      "M15 8H22V37H15ZM43 8H50V37H43Z",
+      "M5 24Q-5 7 14 1L18 7Q6 11 11 23ZM50 4Q68 10 59 27L53 22Q59 13 47 10Z",
+      "M21-4H31V26H21ZM35-4H45V26H35Z",
+      "M-4 30 7 14 15 31V47H-4ZM49 31 57 14 68 30V47H49ZM23 47H41L38 64H26Z",
+      "M12-7H21V39H12ZM45-7H54V39H45ZM3 39H14L20 59H1ZM50 39H61L64 59H44Z",
+    ],
     summon: [
       "M3 23Q-2 6 15 0L18 6Q7 10 10 22ZM61 23Q66 6 49 0L46 6Q57 10 54 22Z",
       "M0 31Q7 22 14 31V50L7 56 0 50ZM50 31Q57 22 64 31V50L57 56 50 50Z",
@@ -268,6 +284,7 @@
   };
   function drawAttachment(ctx, type, n) {
     const material = {
+      aer: ["#144869", "#b3f0ff"],
       summon: ["#471725", "#f48f9c"],
       basic: ["#126b68", "#8ce7d6"],
       sniper: ["#285c30", "#c1e69a"],
@@ -343,6 +360,14 @@
   }
   function enemyIcon(type) {
     const body = {
+      helicopter:
+        '<path d="M3 9H17L22 12 17 15H3Z" fill="#73b6ce" stroke="#bceeff"/><path d="M4 12H0M1 9V15M11 3V21M4 5H19" stroke="#d3f7ff" stroke-width="1.5"/>',
+      gust: '<path d="M23 12 3 3 8 12 3 21Z" fill="#c1f1ff"/><path d="M0 7 8 10M0 17 8 14" stroke="#67bee2" stroke-width="1.5"/>',
+      drone:
+        '<path d="M6 8H17L21 12 17 16H6L3 12Z" fill="#659fbd"/><path d="M7 5V19M17 5V19M3 4H11M13 4H21M3 20H11M13 20H21" stroke="#d2f6ff" stroke-width="1.5"/>',
+      whirl:
+        '<path d="M12 1 20 8 22 12 20 16 12 23 4 16 2 12 4 8Z" fill="#559cbe" stroke="#a3eaff"/><path d="M1 5H9M15 5H23M1 19H9M15 19H23M8 9H17V15H8Z" stroke="#dbfaff" fill="#76d8ff"/>',
+
       magma:
         '<path d="M12 1 22 7 23 17 14 24 3 20 0 9Z" fill="#733d2b" stroke="#ffb27a"/><path d="M12 4 18 10 15 20 7 18 5 9Z" fill="#f28a46"/><path d="M12 7 15 12 12 17 9 12Z" fill="#ffe1a0"/>',
       magmaMinion:

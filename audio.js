@@ -16,6 +16,7 @@
       { name: "FURNACE HEART", boss: "CALDERA RISING", bpm: 138, bossBpm: 162 },
       { name: "VERDANT COIL", boss: "SERPENT CROWN", bpm: 126, bossBpm: 146 },
       { name: "EVENT HORIZON", boss: "VOID SOVEREIGN", bpm: 172, bossBpm: 190 },
+      { name: "SKYBOUND", boss: "EYE OF THE STORM", bpm: 148, bossBpm: 174 },
     ],
     sfxEnabled: true,
     started: false,
@@ -261,7 +262,7 @@
         g = this.ctx.createGain();
       s.buffer = this.buffers[name];
       s.playbackRate.value = rate;
-      g.gain.value = gain;
+      g.gain.value = gain * (bus === this.musicBus ? this.arrangeMix(name) : 1);
       s.connect(g);
       if (pan && this.ctx.createStereoPanner) {
         const p = this.ctx.createStereoPanner();
@@ -308,6 +309,7 @@
       this.played[name] = (this.played[name] || 0) + 1;
     },
     tone(midi, time, duration, gain, type = "bass", cutoff = 1100) {
+      gain *= this.arrangeMix(type);
       const ctx = this.ctx,
         freq = 440 * Math.pow(2, (midi - 69) / 12),
         env = ctx.createGain(),
@@ -377,7 +379,33 @@
         fill = bar % 8 === 7;
       const drum = (name, gain, pan = 0, rate = 1) =>
         this.playBuffer(name, time, gain, this.musicBus, pan, rate);
-      if (this.mapIndex === 1) {
+      if (this.mapIndex === 4) {
+        // SKYBOUND: airy suspended hook, liquid breaks; the storm adds a harder syncopated bass.
+        const root = [38, 41, 34, 36][Math.floor(bar / 2) % 4];
+        if (!breakdown && [0, 6, 10, ...(boss ? [3, 14] : [])].includes(b))
+          drum("kick", boss ? 0.83 : 0.72);
+        if (!breakdown && [4, 12].includes(b)) drum("snare", boss ? 0.6 : 0.46, 0, 1.08);
+        if (!breakdown && (b % 2 === 0 || boss))
+          drum("hat", b % 2 ? 0.08 : 0.15, Math.sin(b) * 0.45, 1.3);
+        const bass = [0, null, 0, 12, null, 7, 0, null, 0, 12, null, 10, 7, null, 0, 7];
+        if (bass[b] !== null)
+          this.tone(root - 12 + bass[b], time, step * 1.5, 0.078, "bass", boss ? 1800 : 950);
+        const hook = [12, 19, 22, 24, 19, 17, 14, 19];
+        if (b % 2 === 0)
+          this.tone(
+            root + hook[(b / 2 + Math.floor(bar / 2)) % 8],
+            time,
+            step * 2.7,
+            0.035,
+            "bell",
+            4200,
+          );
+        if (b === 0)
+          for (const n of [0, 7, 14]) this.tone(root + 12 + n, time, step * 14, 0.014, "pad", 2200);
+        if (boss && [3, 7, 11, 15].includes(b))
+          this.tone(root + 24 + [0, 1, 7, 10][b >> 2], time, step * 1.4, 0.03, "lead", 3200);
+        if (fill && b >= 12) drum("snare", 0.14 + (b - 12) * 0.025, (b - 13.5) * 0.22);
+      } else if (this.mapIndex === 1) {
         // FURNACE HEART: heavy four-on-floor, Phrygian ostinato, metallic syncopation.
         const root = [33, 33, 34, 29][Math.floor(bar / 2) % 4];
         if ((!breakdown && b % 4 === 0) || (boss && [3, 10, 15].includes(b)))
@@ -482,7 +510,7 @@
           0.75 + (b - 12) * 0.12,
         );
     },
-    composeStep(index, time) {
+    composeCoreStep(index, time) {
       if (this.mapIndex > 0) {
         this.composeMapStep(index, time);
         return;
@@ -491,7 +519,7 @@
         this.composeBossStep(index, time);
         return;
       }
-      const s = index % (16 * BARS),
+      const s = index % (16 * 32),
         bar = Math.floor(s / 16),
         b = s % 16,
         root = [38, 38, 34, 36][Math.floor(bar / 2) % 4];
@@ -530,6 +558,12 @@
       }
       if (bar % 8 === 7 && b >= 14) this.playBuffer("openhat", time, 0.3, this.musicBus);
     },
+    arrangeMix() {
+      return 1;
+    },
+    composeStep(index, time) {
+      this.composeCoreStep(index % (16 * 32), time);
+    },
     schedule() {
       if (!this.ctx || this.ctx.state !== "running" || !this.started || !this.musicEnabled) return;
       const now = this.ctx.currentTime;
@@ -558,6 +592,8 @@
         sfx: this.sfxEnabled,
         started: this.started,
         steps: this.step,
+        totalBars: BARS,
+        section: Math.floor(this.step / 16) % BARS,
         voices: this.voices,
         played: { ...this.played },
         bpm: this.musicBPM(),
@@ -565,17 +601,100 @@
       };
     },
     async renderTrack(boss = false, mapIndex = this.mapIndex, bars = BARS) {
-      const theme = this.themes[mapIndex],
+      // Capture the same score events, then cache/mix PCM voices. This avoids keeping thousands
+      // of simultaneous OfflineAudioContext oscillator graphs alive for a three-minute export.
+      const sr = 32000,
+        theme = this.themes[mapIndex],
         step = 60 / (boss ? theme.bossBpm : theme.bpm) / 4;
-      const duration = bars * 16 * step + 1.2;
-      const c = new OfflineAudioContext(1, Math.ceil(duration * 32000), 32000),
-        offline = Object.create(this);
-      offline.bossMode = boss;
-      offline.mapIndex = mapIndex;
-      offline.setup(c, c.destination);
-      for (let s = 0; s < bars * 16; s++) offline.composeStep(s, s * step);
-      const b = await c.startRendering();
-      return { samples: b.getChannelData(0), sampleRate: c.sampleRate };
+      const out = new Float32Array(Math.ceil((bars * 16 * step + 2) * sr)),
+        events = [],
+        score = Object.create(this);
+      score.mapIndex = mapIndex;
+      score.bossMode = boss;
+      score.musicBus = {};
+      score.playBuffer = function (name, time, gain, bus, pan = 0, rate = 1) {
+        events.push({ name, time, gain: gain * this.arrangeMix(name), rate });
+      };
+      score.tone = function (midi, time, duration, gain, type = "bass", cutoff = 1100) {
+        events.push({ midi, time, duration, gain: gain * this.arrangeMix(type), type, cutoff });
+      };
+      for (let i = 0; i < bars * 16; i++) score.composeStep(i, i * step);
+      const maker = Object.create(this);
+      maker.ctx = {
+        sampleRate: sr,
+        createBuffer: (_c, n) => {
+          const data = new Float32Array(n);
+          return { getChannelData: () => data };
+        },
+      };
+      const drums = {},
+        cache = new Map();
+      for (const e of events) {
+        let data;
+        if (e.name) {
+          drums[e.name] ??= maker.makeBuffer(e.name).getChannelData(0);
+          data = drums[e.name];
+        } else {
+          const key = [e.midi, e.duration.toFixed(4), e.type, e.cutoff].join(":");
+          data = cache.get(key);
+          if (!data) {
+            const n = Math.ceil(e.duration * sr);
+            data = new Float32Array(n);
+            const f = 440 * 2 ** ((e.midi - 69) / 12);
+            let low = 0,
+              low2 = 0,
+              coef = 0.1;
+            for (let j = 0; j < n; j++) {
+              const t = j / sr,
+                u = j / n;
+              if (j % 64 === 0)
+                coef = 1 - Math.exp((-2 * Math.PI * (e.cutoff * (200 / e.cutoff) ** u)) / sr);
+              let v = 0;
+              for (const detune of [-6, 6]) {
+                const phase = f * 2 ** (detune / 1200) * t;
+                v +=
+                  e.type === "bell" || e.type === "pad"
+                    ? Math.sin(2 * Math.PI * phase)
+                    : e.type === "pluck"
+                      ? (2 / Math.PI) * Math.asin(Math.sin(2 * Math.PI * phase))
+                      : 2 * (phase - Math.floor(phase + 0.5));
+              }
+              low += (v - low) * coef;
+              low2 += (low - low2) * coef;
+              const attack = e.type === "pad" ? 0.12 : 0.004,
+                env =
+                  t < attack
+                    ? t / attack
+                    : u < 0.65
+                      ? 1 - ((u - 0.02) / 0.63) * 0.28
+                      : 0.72 * (0.0001 / 0.72) ** ((u - 0.65) / 0.35);
+              data[j] =
+                (Math.tanh(low2 * 2.2) +
+                  (e.type === "bass" ? Math.sin(Math.PI * f * t) * 0.45 : 0)) *
+                Math.max(0, env);
+            }
+            cache.set(key, data);
+          }
+        }
+        const start = Math.round(e.time * sr),
+          rate = e.rate || 1,
+          n = Math.min(out.length - start, Math.ceil(data.length / rate));
+        for (let j = 0; j < n; j++) {
+          const at = j * rate,
+            a = Math.floor(at),
+            f = at - a;
+          out[start + j] += ((data[a] || 0) * (1 - f) + (data[a + 1] || 0) * f) * e.gain;
+        }
+      }
+      const dry = out.slice(),
+        delay = Math.round(0.238 * sr);
+      let damp = 0;
+      for (let i = 0; i < out.length; i++) {
+        damp += ((i >= delay ? dry[i - delay] + out[i - delay] * 0.24 : 0) - damp) * 0.376;
+        out[i] = dry[i] + damp * 0.13;
+      }
+      for (let i = 0; i < out.length; i++) out[i] = Math.tanh(out[i] * 0.72 * 0.58) * 0.95;
+      return { samples: out, sampleRate: sr };
     },
   };
   window.VectorAudio = audio;

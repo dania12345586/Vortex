@@ -44,7 +44,7 @@
     splash: {
       name: "Сплэш",
       price: 100,
-      damage: 17,
+      damage: 18,
       range: 156,
       interval: 1.4,
       rotation: 180,
@@ -55,7 +55,7 @@
     laser: {
       name: "Лазер",
       price: 140,
-      damage: 10,
+      damage: 11,
       range: 174,
       interval: 2.4,
       rotation: 250,
@@ -98,9 +98,9 @@
     cut: {
       name: "Разрез",
       price: 220,
-      damage: 22,
+      damage: 17,
       range: 98,
-      interval: 0.34,
+      interval: 0.4,
       rotation: 410,
       projectile: 0,
       color: "#b4b8bc",
@@ -109,7 +109,7 @@
     boomerang: {
       name: "Бумеранг",
       price: 190,
-      damage: 14,
+      damage: 15,
       range: 180,
       interval: 1.6,
       rotation: 240,
@@ -131,7 +131,7 @@
     machine: {
       name: "Пулемёт",
       price: 800,
-      damage: 5,
+      damage: 5.5,
       range: 184,
       interval: 0.32,
       rotation: 310,
@@ -144,7 +144,7 @@
     tesla: {
       name: "Тесла",
       price: 240,
-      damage: 24,
+      damage: 22,
       range: 164,
       interval: 1.25,
       rotation: 260,
@@ -164,7 +164,7 @@
     mortar: {
       name: "Мортира",
       price: 300,
-      damage: 62,
+      damage: 58,
       range: 300,
       interval: 3.6,
       rotation: 145,
@@ -174,7 +174,7 @@
     prism: {
       name: "Призма",
       price: 280,
-      damage: 33,
+      damage: 31,
       range: 214,
       interval: 1.9,
       rotation: 190,
@@ -186,7 +186,7 @@
       price: 260,
       damage: 26,
       range: 125,
-      interval: 1.9,
+      interval: 2.05,
       rotation: 360,
       projectile: 0,
       color: "#bf76c8",
@@ -238,6 +238,57 @@
     );
     t.effect.boss = t.effect.minion = 100;
   }
+  TYPES.aer = {
+    name: "Аэр",
+    price: 120,
+    damage: 9,
+    range: 184,
+    interval: 0.24,
+    rotation: 360,
+    projectile: 680,
+    color: "#67cfff",
+    effect: {},
+  };
+  // Distinct jobs: strong counters and genuine weaknesses, rather than nearly neutral rows.
+  const matchupRows = {
+    basic: [150, 125, 50, 100, 25, 125, 50, 150, 100, 50],
+    sniper: [100, 25, 175, 125, 150, 175, 150, 25, 75, 175],
+    splash: [125, 175, 50, 150, 25, 75, 50, 125, 200, 100],
+    laser: [75, 25, 150, 100, 175, 75, 175, 25, 50, 150],
+    pyro: [75, 125, 25, 150, 175, 75, 25, 150, 175, 50],
+    vortex: [75, 150, 25, 125, 175, 50, 50, 175, 150, 75],
+    cut: [125, 50, 150, 75, 25, 125, 100, 25, 75, 125],
+    boomerang: [125, 175, 25, 150, 50, 75, 25, 175, 200, 75],
+    freeze: [75, 175, 50, 150, 50, 75, 50, 200, 75, 125],
+    machine: [150, 125, 50, 175, 25, 125, 25, 150, 100, 75],
+    tesla: [100, 175, 25, 200, 50, 175, 50, 150, 175, 75],
+    acid: [75, 25, 175, 50, 175, 50, 200, 25, 100, 75],
+    mortar: [100, 25, 175, 50, 150, 125, 150, 25, 175, 75],
+    prism: [100, 50, 150, 175, 75, 175, 150, 25, 125, 50],
+    pulse: [150, 175, 25, 125, 50, 75, 25, 200, 175, 50],
+    summon: [100, 50, 150, 75, 125, 175, 50, 25, 100, 150],
+    aer: Array(10).fill(25),
+  };
+  const GROUND = [
+    "normal",
+    "fast",
+    "tank",
+    "sound",
+    "fighter",
+    "medic",
+    "guardian",
+    "sprinter",
+    "splitter",
+    "jammer",
+  ];
+  for (const [type, row] of Object.entries(matchupRows)) {
+    GROUND.forEach((enemy, i) => (TYPES[type].effect[enemy] = row[i]));
+    Object.assign(TYPES[type].effect, {
+      helicopter: type === "aer" ? 150 : type === "pyro" ? 100 : 0,
+      gust: type === "aer" ? 125 : type === "pyro" ? 150 : 0,
+      drone: type === "aer" ? 175 : type === "pyro" ? 125 : 0,
+    });
+  }
   const TOWER_ORDER = Object.keys(TYPES),
     FINAL_WAVE = 40;
   const REGULAR = [
@@ -251,6 +302,9 @@
     "sprinter",
     "splitter",
     "jammer",
+    "helicopter",
+    "gust",
+    "drone",
   ];
   const coin = `<svg class="coin-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="m8 3 17 2 5 15-12 11L3 22 2 10z" fill="#f3ce55"/><path d="m10 8 11 1 4 10-8 7-10-6-1-8z" fill="#c8a239"/></svg>`;
   const ET = {
@@ -258,7 +312,7 @@
     fast: { name: "Быстрый", hp: 25, speed: 98, reward: 8, defense: 0, color: "#f3d266", r: 9 },
     tank: { name: "Танк", hp: 125, speed: 34, reward: 16, defense: 25, color: "#ef645a", r: 12 },
     sound: { name: "Саунд", hp: 85, speed: 52, reward: 14, defense: 12, color: "#55a8eb", r: 12 },
-    fighter: { name: "Боец", hp: 110, speed: 40, reward: 19, defense: 70, color: "#e98649", r: 12 },
+    fighter: { name: "Боец", hp: 110, speed: 40, reward: 19, defense: 65, color: "#e98649", r: 12 },
     minion: {
       name: "Кристальный миньон",
       hp: 1200,
@@ -322,8 +376,8 @@
   Object.assign(ET, {
     magma: {
       name: "Магма",
-      hp: 32000,
-      speed: 15,
+      hp: 35000,
+      speed: 16,
       reward: 600,
       defense: 38,
       shieldDefense: 38,
@@ -333,7 +387,7 @@
     },
     magmaMinion: {
       name: "Магмовый миньон",
-      hp: 6500,
+      hp: 6000,
       speed: 23,
       reward: 24,
       defense: 35,
@@ -342,8 +396,8 @@
     },
     asterix: {
       name: "Астерикс",
-      hp: 18000,
-      speed: 17,
+      hp: 20000,
+      speed: 18,
       reward: 650,
       defense: 28,
       shieldDefense: 28,
@@ -353,8 +407,8 @@
     },
     asterPart: {
       name: "Сегмент Астерикса",
-      hp: 2400,
-      speed: 17,
+      hp: 2600,
+      speed: 18,
       reward: 24,
       defense: 18,
       color: "#6dbd95",
@@ -362,8 +416,8 @@
     },
     cosmo: {
       name: "Космо",
-      hp: 18000,
-      speed: 19,
+      hp: 19000,
+      speed: 21,
       reward: 800,
       defense: 35,
       shieldDefense: 35,
@@ -381,15 +435,105 @@
       r: 13,
     },
   });
+  Object.assign(ET, {
+    helicopter: {
+      name: "Вертолёт",
+      hp: 52,
+      speed: 62,
+      reward: 13,
+      defense: 12,
+      color: "#85c8df",
+      r: 15,
+      flying: true,
+    },
+    gust: {
+      name: "Порыв",
+      hp: 28,
+      speed: 105,
+      reward: 12,
+      defense: 0,
+      color: "#d2f3ff",
+      r: 11,
+      flying: true,
+    },
+    drone: {
+      name: "Беспилотник",
+      hp: 76,
+      speed: 78,
+      reward: 18,
+      defense: 8,
+      color: "#609cbd",
+      r: 15,
+      flying: true,
+    },
+    whirl: {
+      name: "Вихрь",
+      hp: 42000,
+      speed: 20,
+      reward: 800,
+      defense: 30,
+      shieldDefense: 30,
+      color: "#8de4ff",
+      r: 34,
+      flying: true,
+      boss: true,
+    },
+  });
+  const isAir = (e) => !!ET[e.type]?.flying || (e.airTime || 0) > 0;
+  const canHit = (t, e) => !isAir(e) || t.type === "aer" || t.type === "pyro" || e.type === "whirl";
+  const effectFor = (t, e) =>
+    e.type === "whirl"
+      ? t.type === "aer"
+        ? 100
+        : 50
+      : t.type === "aer"
+        ? isAir(e)
+          ? ET[e.type]?.flying
+            ? TYPES.aer.effect[e.type] || 125
+            : 125
+          : 25
+        : isElite(e)
+          ? 100
+          : TYPES[t.type].effect[e.type];
   const isBoss = (e) => !!e && (e.type === "boss" || !!ET[e.type]?.boss);
   const isElite = (e) =>
     isBoss(e) || ["minion", "magmaMinion", "asterPart", "cosmicMinion"].includes(e.type);
   for (const t of Object.values(TYPES))
-    for (const k of ["magma", "magmaMinion", "asterix", "asterPart", "cosmo", "cosmicMinion"])
+    for (const k of [
+      "magma",
+      "magmaMinion",
+      "asterix",
+      "asterPart",
+      "cosmo",
+      "cosmicMinion",
+      "whirl",
+    ])
       t.effect[k] = 100;
+  for (const k of [
+    "boss",
+    "minion",
+    "magma",
+    "magmaMinion",
+    "asterix",
+    "asterPart",
+    "cosmo",
+    "cosmicMinion",
+  ])
+    TYPES.aer.effect[k] = 25;
+  TYPES.aer.effect.whirl = 100;
   // Every tower has its own three module choices and two mutually exclusive ultimates.
   const A = (name, desc, mods) => ({ name, desc, mods });
   const MODULES = {
+    aer: [
+      A("Двойной затвор", "Темп ×1,25", { rate: 1.25 }),
+      A("Радар", "Радиус ×1,2", { range: 1.2 }),
+      A("Давление", "Урон ×1,3", { damage: 1.3 }),
+      A("Грозовой заряд", "Взрыв: урон ×2, радиус ×1,5; шанс остаётся 2%", {
+        airBlast: 2,
+        area: 1.5,
+      }),
+      A("Истребитель", "Урон ×1,6; темп ×1,2", { damage: 1.6, rate: 1.2 }),
+    ],
     summon: [
       A("Кровавый обряд", "Шанс призыва +15 п.п.", { summonChance: 0.15 }),
       A("Плоть титана", "HP союзника ×1,5", { allyHP: 1.5 }),
@@ -440,11 +584,11 @@
       A("Ураган", "Урон ×1,6; время жизни ×1,5", { damage: 1.6, life: 1.5 }),
     ],
     cut: [
-      A("Заточка", "Урон ×1,3", { damage: 1.3 }),
-      A("Серия", "Темп ×1,3", { rate: 1.3 }),
-      A("Длинное лезвие", "Радиус ×1,2; усиление ран ×1,3", { range: 1.2, wound: 1.3 }),
-      A("Глубокая рана", "Предел усиления порезов ×5", { woundCap: 4 }),
-      A("Хирург", "Урон ×1,55; темп ×1,3", { damage: 1.55, rate: 1.3 }),
+      A("Заточка", "Урон ×1,2", { damage: 1.2 }),
+      A("Серия", "Темп ×1,2", { rate: 1.2 }),
+      A("Длинное лезвие", "Радиус ×1,2; накопление ран ×1,25", { range: 1.2, wound: 1.25 }),
+      A("Глубокая рана", "Предел усиления порезов ×2,6", { woundCap: 1.6 }),
+      A("Хирург", "Урон ×1,4; темп ×1,2", { damage: 1.4, rate: 1.2 }),
     ],
     boomerang: [
       A("Кромка", "Урон ×1,3", { damage: 1.3 }),
@@ -493,7 +637,7 @@
       A("Фокусировка", "Урон ×1,35", { damage: 1.35 }),
       A("Рефрактор", "Темп ×1,2; радиус ×1,15", { rate: 1.2, range: 1.15 }),
       A("Спектр", "Ширина ×2; урон ×1,4", { width: 2, damage: 1.4 }),
-      A("Белый луч", "Урон ×1,85; темп ×1,15", { damage: 1.85, rate: 1.15 }),
+      A("Белый луч", "Урон ×1,65; темп ×1,15", { damage: 1.65, rate: 1.15 }),
     ],
     pulse: [
       A("Резонатор", "Радиус ×1,2", { range: 1.2 }),
@@ -515,17 +659,18 @@
     }
     return out;
   }
+  const BOSS_LORE = {
+    boss: "Неопознанная форма жизни, найденная в глубоких пещерах, заражённых голубым кристаллом.",
+    magma:
+      "Существо, появившееся прямо из вулкана. Его цель — уничтожить всё вокруг и захватить базу «Эфелон».",
+    asterix:
+      "Созданный в лаборатории, Астерикс устроил саботаж и забрал с собой остальные объекты лаборатории, воссоединившись с ними в одну единую цепочку.",
+    cosmo:
+      "Неопознанный объект, предположительно прибывший из дальнего космоса. Способен управлять гравитацией и пространством.",
+    whirl: "Не существо, а аномалия, обладающая огромной силой влияния на ветер и давление.",
+  };
   const LEVELS = [
     {
-      id: "crystal",
-      name: "Кристальный контур",
-      subtitle: "Проверенный рубеж. Узкие повороты и кристаллическая осада.",
-      boss: "boss",
-      color: "#93cdd8",
-      bg: "#191919",
-      road: "#393939",
-      track: "HARD CIRCUIT",
-      style: "Industrial breakbeat · 156 BPM",
       w: 896,
       h: 560,
       route: [
@@ -538,89 +683,225 @@
         [12, 7],
         [15, 7],
       ],
+      pads: [
+        [1, 2],
+        [2, 4],
+        [4, 4],
+        [2, 6],
+        [3, 8],
+        [6, 6],
+        [5, 8],
+        [13, 4],
+        [11, 6],
+        [12, 8],
+        [14, 6],
+        [5, 3],
+        [9, 6],
+        [5, 1],
+        [12, 1],
+        [13, 2],
+      ],
+      subtitle: "Компактный двойной перегиб. Портал слева, ядро справа.",
+      id: "crystal",
+      name: "Кристальный контур",
+      boss: "boss",
+      color: "#93cdd8",
+      bg: "#181d21",
+      road: "#3d464c",
+      track: "HARD CIRCUIT",
+      style: "Industrial breakbeat · 156 BPM",
     },
     {
+      w: 1008,
+      h: 728,
+      route: [
+        [8, 0],
+        [8, 2],
+        [14, 2],
+        [14, 5],
+        [4, 5],
+        [4, 8],
+        [12, 8],
+        [12, 12],
+      ],
+      pads: [
+        [7, 1],
+        [9, 1],
+        [13, 1],
+        [15, 3],
+        [13, 6],
+        [3, 6],
+        [5, 7],
+        [7, 9],
+        [11, 9],
+        [13, 11],
+        [11, 11],
+        [2, 4],
+        [16, 6],
+        [12, 3],
+        [5, 3],
+        [4, 4],
+        [9, 9],
+        [4, 2],
+      ],
+      subtitle: "Север → юг: широкие поперечные проходы и узкие вертикальные переходы.",
       id: "magma",
       name: "Пепельный разлом",
-      subtitle: "Раскалённые петли. Лава меняет темп наступления.",
       boss: "magma",
       color: "#f3a15d",
-      bg: "#211a1a",
-      road: "#493831",
+      bg: "#211c18",
+      road: "#514539",
       track: "FURNACE HEART",
       style: "Volcanic techno · 138 BPM",
-      w: 1008,
-      h: 616,
-      route: [
-        [0, 2],
-        [5, 2],
-        [5, 5],
-        [2, 5],
-        [2, 8],
-        [9, 8],
-        [9, 3],
-        [14, 3],
-        [14, 8],
-        [17, 8],
-      ],
     },
     {
-      id: "asterix",
-      name: "Изумрудная спираль",
-      subtitle: "Длинные изгибы. Живой хвост защищает древнего стража.",
-      boss: "asterix",
-      color: "#8bd8ae",
-      bg: "#16201e",
-      road: "#344941",
-      track: "VERDANT COIL",
-      style: "Melodic broken beat · 126 BPM",
-      w: 1008,
+      w: 1064,
       h: 672,
       route: [
-        [0, 5],
-        [3, 5],
-        [3, 2],
-        [8, 2],
-        [8, 6],
-        [5, 6],
-        [5, 10],
-        [12, 10],
-        [12, 3],
-        [16, 3],
-        [16, 8],
-        [17, 8],
+        [18, 9],
+        [14, 9],
+        [14, 3],
+        [10, 3],
+        [10, 9],
+        [5, 9],
+        [5, 3],
+        [1, 3],
+        [1, 0],
       ],
+      pads: [
+        [16, 8],
+        [15, 10],
+        [15, 4],
+        [13, 2],
+        [11, 4],
+        [6, 8],
+        [4, 6],
+        [6, 3],
+        [3, 4],
+        [2, 2],
+        [2, 1],
+        [16, 5],
+        [8, 2],
+        [3, 10],
+        [13, 5],
+        [7, 5],
+        [15, 7],
+        [6, 10],
+      ],
+      subtitle: "Наступление справа снизу; ядро слева вверху. Три длинных коридора.",
+      id: "asterix",
+      name: "Изумрудная спираль",
+      boss: "asterix",
+      color: "#8bd8ae",
+      bg: "#19201e",
+      road: "#3e5148",
+      track: "VERDANT COIL",
+      style: "Melodic broken beat · 126 BPM",
     },
     {
+      w: 1456,
+      h: 896,
+      route: [
+        [1, 14],
+        [1, 2],
+        [23, 2],
+        [23, 13],
+        [6, 13],
+        [6, 6],
+        [18, 6],
+        [18, 10],
+        [11, 10],
+        [11, 8],
+      ],
+      pads: [
+        [2, 12],
+        [2, 9],
+        [2, 5],
+        [2, 1],
+        [6, 3],
+        [10, 1],
+        [14, 3],
+        [24, 6],
+        [22, 10],
+        [24, 13],
+        [19, 12],
+        [15, 14],
+        [10, 12],
+        [5, 14],
+        [10, 5],
+        [14, 7],
+        [17, 9],
+        [15, 11],
+        [10, 9],
+        [12, 8],
+        [17, 1],
+        [21, 6],
+        [4, 11],
+        [8, 4],
+      ],
+      subtitle: "Портал снаружи, ядро в центре. Большая квадратная спираль.",
       id: "cosmo",
       name: "Горизонт событий",
-      subtitle: "Огромный сектор. Разломы пространства и исчезающие опоры.",
       boss: "cosmo",
       color: "#c49af5",
-      bg: "#181723",
-      road: "#39344f",
+      bg: "#1b1925",
+      road: "#454056",
       track: "EVENT HORIZON",
       style: "Cosmic drum & bass · 172 BPM",
-      w: 1344,
-      h: 840,
+    },
+    {
+      w: 1288,
+      h: 728,
       route: [
-        [0, 3],
-        [5, 3],
+        [21, 1],
+        [14, 1],
+        [14, 4],
+        [20, 4],
+        [20, 9],
+        [10, 9],
+        [10, 4],
+        [4, 4],
+        [4, 11],
+        [1, 11],
+      ],
+      pads: [
+        [20, 2],
+        [17, 2],
+        [15, 3],
+        [13, 2],
+        [16, 5],
+        [19, 5],
+        [21, 7],
+        [12, 8],
+        [11, 6],
+        [9, 5],
+        [7, 3],
+        [5, 5],
+        [3, 7],
         [5, 10],
         [2, 10],
-        [2, 13],
-        [10, 13],
-        [10, 6],
-        [8, 6],
-        [8, 1],
-        [16, 1],
+        [1, 12],
+        [8, 9],
+        [22, 3],
+        [21, 11],
+        [14, 11],
+      ],
+      subtitle: "Портал справа вверху, ядро слева внизу. Парящие платформы: радиус −20%.",
+      id: "sky",
+      name: "Небесный бастион",
+      boss: "whirl",
+      color: "#94ddff",
+      bg: "#19262e",
+      road: "#3e5663",
+      track: "SKYBOUND",
+      style: "Liquid breaks · 148 BPM",
+      airPads: [
+        [17, 2],
         [16, 5],
-        [13, 5],
-        [13, 11],
-        [20, 11],
-        [20, 4],
-        [23, 4],
-        [23, 12],
+        [12, 8],
+        [7, 3],
+        [5, 10],
+        [8, 9],
       ],
     },
   ];
@@ -632,46 +913,6 @@
     platformCoords = [],
     platforms = [];
   let pathLength = 0;
-  const FIRST_PLATFORMS = [
-    [1, 2],
-    [2, 2],
-    [1, 4],
-    [2, 4],
-    [2, 5],
-    [4, 4],
-    [4, 5],
-    [2, 6],
-    [2, 8],
-    [3, 8],
-    [4, 8],
-    [5, 6],
-    [5, 8],
-    [6, 6],
-    [6, 8],
-    [6, 4],
-    [6, 5],
-    [8, 5],
-    [8, 6],
-    [8, 7],
-    [7, 8],
-    [8, 1],
-    [8, 3],
-    [9, 1],
-    [10, 1],
-    [10, 3],
-    [11, 1],
-    [11, 3],
-    [11, 4],
-    [13, 3],
-    [13, 4],
-    [11, 5],
-    [13, 6],
-    [11, 6],
-    [12, 8],
-    [13, 8],
-    [14, 6],
-    [14, 8],
-  ];
   function configureMap() {
     currentLevel = LEVELS[levelIndex];
     W = currentLevel.w;
@@ -691,27 +932,7 @@
           `${Math.round((a.x + ((b.x - a.x) * j) / (len / C) - C / 2) / C)},${Math.round((a.y + ((b.y - a.y) * j) / (len / C) - C / 2) / C)}`,
         );
     }
-    if (levelIndex === 0) platformCoords.push(...FIRST_PLATFORMS.map((x) => [...x]));
-    else {
-      const set = new Set();
-      for (const k of road) {
-        const [c, r] = k.split(",").map(Number);
-        for (const [dx, dy] of [
-          [1, 0],
-          [-1, 0],
-          [0, 1],
-          [0, -1],
-        ]) {
-          const x = c + dx,
-            y = r + dy,
-            key = `${x},${y}`;
-          if (x > 0 && x < W / C - 1 && y > 0 && y < H / C - 1 && !road.has(key)) set.add(key);
-        }
-      }
-      platformCoords.push(
-        ...[...set].map((k) => k.split(",").map(Number)).sort((a, b) => a[1] - b[1] || a[0] - b[0]),
-      );
-    }
+    platformCoords.push(...currentLevel.pads.map((p) => [...p]));
     platforms.push(
       ...platformCoords.map(([c, r]) => ({
         c,
@@ -719,6 +940,7 @@
         x: c * C + C / 2,
         y: r * C + C / 2,
         destroyed: false,
+        air: levelIndex === 4 && currentLevel.airPads.some((p) => p[0] === c && p[1] === r),
       })),
     );
   }
@@ -744,11 +966,21 @@
     }
     if (n % 5 === 0) {
       counts.normal += 4;
-      counts.tank += 3;
+      counts.tank += n <= 10 ? 2 : 3;
     }
+    counts.helicopter = levelIndex === 4 && n >= 5 ? 2 + Math.floor((n - 5) / 4) : 0;
+    counts.gust = levelIndex === 4 && n >= 9 ? 1 + Math.floor((n - 9) / 7) : 0;
+    counts.drone = levelIndex === 4 && n >= 13 ? 1 + Math.floor((n - 13) / 10) : 0;
+    counts.normal = Math.max(2, counts.normal - counts.helicopter - counts.gust - counts.drone);
     // Final wave is a boss encounter, not a full late-wave swarm plus a boss.
     if (n === FINAL_WAVE)
-      Object.assign(counts, { normal: 24, fast: 12, tank: 5, sound: 3, fighter: 3 });
+      Object.assign(counts, {
+        normal: levelIndex === 4 ? 10 : 24,
+        fast: levelIndex === 4 ? 8 : 12,
+        tank: 5,
+        sound: 3,
+        fighter: 3,
+      });
     let queue = [],
       remain = { ...counts };
     while (Object.values(remain).some((v) => v > 0))
@@ -761,7 +993,9 @@
       gap: Math.max(0.36, 0.94 - n * 0.023),
       hp: {
         ...Object.fromEntries(REGULAR.map((k) => [k, Math.round(ET[k].hp * mult)])),
-        ...Object.fromEntries(["boss", "magma", "asterix", "cosmo"].map((k) => [k, ET[k].hp])),
+        ...Object.fromEntries(
+          ["boss", "magma", "asterix", "cosmo", "whirl"].map((k) => [k, ET[k].hp]),
+        ),
       },
       bonus: 25 + n * 3,
     };
@@ -916,8 +1150,14 @@
     const at = (k) => m[k] || 1;
     return {
       damage: b.damage * 1.31 ** L * pwr * at("damage") * (t.magmaTime > 0 ? 0.7 : 1),
-      range: b.range * (1 + 0.044 * L) * at("range"),
-      interval: b.interval / (1.11 ** L * pwr * at("rate") * (t.magmaTime > 0 ? 0.55 : 1)),
+      range: b.range * (1 + 0.044 * L) * at("range") * (t.airPlatform || t.air ? 0.8 : 1),
+      interval:
+        b.interval /
+        (1.11 ** L *
+          pwr *
+          at("rate") *
+          (t.magmaTime > 0 ? 0.55 : 1) *
+          (t.suppressed > 0 ? 0.8 : 1)),
       rotation: (b.rotation * (1 + 0.07 * L) * Math.PI) / 180,
       projectile: b.projectile * (1 + 0.045 * L) * at("projectile"),
       burst: (t.type === "pyro" ? 3 + Math.floor(L / 4) : 3 + Math.floor(L / 3)) + (m.burst || 0),
@@ -927,8 +1167,8 @@
       spin: t.spin || 0,
       percent: (0.012 + Math.min(0.006, (t.rank - 1) * 0.0004)) * at("percent"),
       slow: Math.min(0.65, (0.25 + Math.min(0.1, (t.rank - 1) * 0.006)) * at("slow")),
-      strip: (3 + Math.min(2, (t.rank - 1) * 0.12)) * at("strip"),
-      area: (t.type === "mortar" ? 85 : 68 + (t.rank - 1) * 0.7) * at("area"),
+      strip: (4 + Math.min(2, (t.rank - 1) * 0.12)) * at("strip"),
+      area: (t.type === "mortar" ? 74 : 68 + (t.rank - 1) * 0.7) * at("area"),
       crit: 0.08 + t.rank * 0.004 + (m.crit || 0),
       critMult: 2,
       aim: (0.38 / (1 + 0.12 * L)) * at("aim"),
@@ -938,12 +1178,12 @@
       chains: 3 + (m.chains || 0),
       jump: 90 * at("jump"),
       decay: m.decay || 0.72,
-      corrosion: 8 * at("corrosion"),
+      corrosion: 7 * at("corrosion"),
       poison: at("poison"),
       width: 12 * at("width"),
       pwr,
-      allyHP: 160 * (1 + 0.24 * L) * pwr * at("allyHP"),
-      summonChance: Math.min(0.65, 0.25 + (t.rank - 1) * 0.004 + (m.summonChance || 0)),
+      allyHP: 150 * (1 + 0.24 * L) * pwr * at("allyHP"),
+      summonChance: Math.min(0.6, 0.23 + (t.rank - 1) * 0.004 + (m.summonChance || 0)),
     };
   }
 
@@ -1021,27 +1261,31 @@
   function towerNote(t) {
     const v = stat(t);
     return (
-      {
+      (t.suppressed > 0 ? "Обстрел: темп −20%. " : "") +
+      (t.airPlatform ? "Воздушная платформа: радиус −20%. " : "") +
+      ({
         pyro: `Залп ${v.burst} ракет · 0,17 с между ними. Салют: −${Math.round(v.slow * 100)}% скорости на 2,5 с; +${(v.percent * 100).toFixed(1)}% HP. Босс не получает урон от HP.`,
+        aer: `Воздух: вертолёт 150 · порыв 125 · беспилотник 175. Наземные цели 25. Пуля с шансом ровно 2% взрывается при попадании.`,
         laser: `0,24 с между пулями · перезарядка ${v.interval.toFixed(2)} с. −${v.strip.toFixed(1)} п.п. защиты на 2 с · не суммируется`,
-        summon: `Порезы оставляют кровотечение на 3 с. При убийстве: ${Math.round(v.summonChance * 100)}% призвать союзника из ядра, HP ${Math.round(v.allyHP)}. Идёт к порталу и таранит первого врага; таран равен HP и игнорирует броню.`,
+        summon: `Порезы оставляют кровотечение на 3 с. При убийстве: ${Math.round(v.summonChance * 100)}% призвать союзника из ядра, HP ${Math.round(v.allyHP)}. Идёт к порталу и таранит первого врага; таран равен HP и игнорирует броню. Таран не запускает новый призыв.`,
         vortex: `Ураган живёт ${v.life.toFixed(1)} с, движется к порталу и наносит ${v.damage.toFixed(1)} урона/с. Замедление 18%. Цели ниже ${Math.round(v.threshold * 100)}% HP уносит до 0,65 с, затем иммунитет 3 с. Босса не уносит. Урон вихрей не складывается.`,
         tesla: `Цепь до ${v.chains} врагов, скачок ${(v.jump / C).toFixed(1)} клетки. Каждый скачок сохраняет ${Math.round(v.decay * 100)} урона из 100.`,
-        acid: `Кислота: ${v.corrosion.toFixed(0)} п.п. защиты на 4 с и ${(v.damage * 0.65 * v.poison).toFixed(1)} урона/с. Сильнейший эффект обновляется, не складывается.`,
+        acid: `Кислота: ${v.corrosion.toFixed(0)} п.п. защиты на 4 с и ${(v.damage * 0.6 * v.poison).toFixed(1)} урона/с. Сильнейший эффект обновляется, не складывается.`,
         mortar: `Дальняя навесная атака по прогнозу движения. Взрыв радиусом ${(v.area / C).toFixed(1)} клетки. Площадь отмечена до попадания.`,
-        prism: `Мгновенный луч пробивает всех врагов по прямой, ширина ${v.width.toFixed(0)}.`,
+        prism: `Луч пробивает врагов по прямой: каждая следующая цель получает ×0,82 урона, минимум 55%. Ширина ${v.width.toFixed(0)}.`,
         pulse: `Круговая волна поражает всех в радиусе и замедляет на 20% на 1 с.`,
-        cut: `Каждый Разрез запоминает свой урон по цели. Последующие порезы усиливаются до ×${1 + (mods(t).woundCap || 2)}. Короткий радиус — высокая частота атак.`,
+        cut: `Каждый последовательный порез добавляет 8 п.п. усиления до ×${1 + (mods(t).woundCap || 0.8)}. После 3 с без попаданий этой башни серия сбрасывается. Короткий радиус, одна цель.`,
         boomerang: `Пробивает врагов на вылете и возврате. За каждую уникальную цель на вылете: +${Math.round(18 * (mods(t).returnBonus || 1))}% урона обратного пути, максимум +${Math.round((mods(t).returnCap || 1.8) * 100)}%.`,
         freeze: `Сосулька: ${(v.icicle * 100).toFixed(1)}% шанс, заморозка ${v.freezeDuration.toFixed(2)} с. Снежки накапливают холод: при 60% — заморозка. После неё защита от повторной заморозки на 1,8 с.`,
         machine: `Разгон: ${Math.round((t.spin || 0) * 100)}%. Полный разгон за ${(4 / (mods(t).spinup || 1)).toFixed(1)} с непрерывной атаки; без цели остывает. Огненная пуля: строго 4%, поджог на 4 с. Улучшения стоят дороже.`,
-      }[t.type] || ""
+      }[t.type] || "")
     );
   }
   function statsMarkup(t) {
     const v = stat(t),
       n = stat(t, true);
     const extra = {
+      aer: ["Взрыв пули", "2%", "2%"],
       summon: [
         "Шанс призыва",
         Math.round(v.summonChance * 100) + "%",
@@ -1059,8 +1303,8 @@
       pulse: ["Волна", "360°", "360°"],
       cut: [
         "Усиление порезов",
-        `до ×${1 + (mods(t).woundCap || 2)}`,
-        `до ×${1 + (mods(t).woundCap || 2)}`,
+        `до ×${1 + (mods(t).woundCap || 0.8)}`,
+        `до ×${1 + (mods(t).woundCap || 0.8)}`,
       ],
       boomerang: [
         "Бонус возврата",
@@ -1188,7 +1432,7 @@
         )
         .join(
           "",
-        )}</div><p class="build-help">Выберите башню · название при наведении<br>Перетаскивание — камера · колесо — масштаб</p>`;
+        )}</div><p class="build-help">${selected.p.air ? "Воздушная платформа · радиус −20%<br>" : ""}Выберите башню · название при наведении<br>Перетаскивание — камера · колесо — масштаб</p>`;
     }
     if (t) {
       const cut = content.indexOf('<div class="upgrade-label">');
@@ -1267,8 +1511,11 @@
     return Math.max(0, base - (isBoss(e) ? Math.min(12, reduction) : reduction));
   }
   function enemyNote(e) {
-    if (isElite(e) && e.type !== "boss" && e.type !== "minion")
-      return `<p>${{ magma: "Магма понижает урон и темп башен. Лавовый след ускоряет врагов на 35%.", magmaMinion: "Медленный тяжёлый миньон. Лава ускоряет его, как и остальных врагов.", asterix: "Голова получает лишь 8% урона, пока жив хотя бы один сегмент хвоста. Лечит союзников каждые 6 с.", asterPart: "Самостоятельная часть хвоста. Уничтожьте все девять сегментов, чтобы открыть голову.", cosmo: "Три полосы HP. Открывает удалённые от ядра порталы и стирает платформы с предупреждением 2,4 с.", cosmicMinion: "Выходит из пространственного разлома Космо." }[e.type]}</p>`;
+    if (BOSS_LORE[e.type]) return `<p class="boss-lore">${BOSS_LORE[e.type]}</p>`;
+    if (["helicopter", "gust", "drone"].includes(e.type))
+      return `<p>${{ helicopter: "Летит над маршрутом. Уязвим только к Аэру и Пиротехнику.", gust: "Воздушная быстрая цель. Каждые 5 с рывок ×1,85 на 0,75 с. Аэр и Пиротехник могут атаковать.", drone: "Летит вне дороги к ближайшей неоглушённой башне. Бомба оглушает на 2,2 с. После трёх сбросов возвращается к порталу без награды. Без башен летит прямо к ядру. Уязвим к Аэру и Пиротехнику." }[e.type]}</p>`;
+    if (["magmaMinion", "asterPart", "cosmicMinion"].includes(e.type))
+      return `<p>${{ magmaMinion: "Осколок вулканического существа, оставшийся на поверхности.", asterPart: "Один из лабораторных объектов, ставших частью единой цепочки Астерикса.", cosmicMinion: "Неизвестный объект из далёкого космоса." }[e.type]}</p>`;
     return `<p>${{ medic: "Каждые 4 с лечит на 5% максимального HP себя и союзников в радиусе 2 клеток (кроме босса).", guardian: "Прикрывает союзников рядом: +12 п.п. защиты. Ауры не складываются.", sprinter: "Каждые 5 с рывок на 1 с: скорость ×1,9.", splitter: "При гибели распадается на двух быстрых осколков с 18% его HP. Награда за осколок — 2 монеты.", jammer: "В радиусе 2,7 клетки замедляет перезарядку башен в 1,45 раза. Поля не складываются." }[e.type] || ""}</p>`;
   }
   function refreshPanel() {
@@ -1310,7 +1557,7 @@
     if (e && $("#enemyHP")) {
       $("#enemyHP").textContent = `${Math.ceil(e.hp)} / ${e.maxHp}`;
       $("#enemyDetail").innerHTML =
-        `${enemyNote(e)}<div><span>Защита</span><b>${defense(e).toFixed(1)}%</b></div><div><span>Скорость</span><b>${enemySpeed(e).toFixed(0)}</b></div>${e.debuffTime > 0 ? `<p class="debuff-note">Лазер: −${e.debuff.toFixed(1)} п.п. · ${e.debuffTime.toFixed(1)} с</p>` : ""}${e.type === "fighter" ? `<p>Ярость: +${Math.round((e.rage || 0) * 100)} к скорости. Полученный урон ускоряет бойца; ярость постепенно спадает.</p>` : ""}${e.type === "sound" ? `<p>Раз в 5 с оглушает ближайшую башню на 1,1 с в радиусе 3,2 клетки.</p>` : ""}${e.slowTime > 0 ? `<p>Замедление: ${Math.round(e.slow * 100)}% · ${e.slowTime.toFixed(1)} с</p>` : ""}${e.freezeTime > 0 ? `<p>Заморожен · ${e.freezeTime.toFixed(1)} с</p>` : ""}${e.burnTime > 0 ? `<p>Горит · ${e.burnTime.toFixed(1)} с</p>` : ""}${e.chill > 0 ? `<p>Накопленный холод: ${Math.round(e.chill * 100)}</p>` : ""}${e.type === "boss" ? `<div><span>Кристаллическая сетка</span><b>${Math.ceil(e.shield)} / ${e.maxShield}</b></div><p>Кристаллизует 2 башни в радиусе 5,7 клетки: опаснейшую и ближайшую из остальных. Луч раз в 10 с, после разрушения сетки — в 8 с. Призывает 3 миньонов раз в 10 с, во второй фазе — 4 раз в 8 с. Замедление не выше 25%, заморозка до 0,5 с с иммунитетом 6 с; снижение защиты не выше 12 п.п.</p>` : ""}`;
+        `${enemyNote(e)}<div><span>Защита</span><b>${defense(e).toFixed(1)}%</b></div><div><span>Скорость</span><b>${enemySpeed(e).toFixed(0)}</b></div>${e.debuffTime > 0 ? `<p class="debuff-note">Лазер: −${e.debuff.toFixed(1)} п.п. · ${e.debuffTime.toFixed(1)} с</p>` : ""}${e.type === "fighter" ? `<p>Ярость: +${Math.round((e.rage || 0) * 100)} к скорости. Полученный урон ускоряет бойца; ярость постепенно спадает.</p>` : ""}${e.type === "sound" ? `<p>Раз в 5 с оглушает ближайшую башню на 1,1 с в радиусе 3,2 клетки.</p>` : ""}${e.slowTime > 0 ? `<p>Замедление: ${Math.round(e.slow * 100)}% · ${e.slowTime.toFixed(1)} с</p>` : ""}${e.freezeTime > 0 ? `<p>Заморожен · ${e.freezeTime.toFixed(1)} с</p>` : ""}${e.burnTime > 0 ? `<p>Горит · ${e.burnTime.toFixed(1)} с</p>` : ""}${e.chill > 0 ? `<p>Накопленный холод: ${Math.round(e.chill * 100)}</p>` : ""}${e.type === "boss" ? `<div><span>Кристаллическая сетка</span><b>${Math.ceil(e.shield)} / ${e.maxShield}</b></div>` : ""}`;
     }
   }
   function chooseBuild(type) {
@@ -1338,6 +1585,7 @@
       y: p.y,
       c: p.c,
       r: p.r,
+      airPlatform: !!p.air,
       angle: -Math.PI / 2,
       cool: 0.15,
       level: 0,
@@ -1443,6 +1691,9 @@
         : alive.length
           ? "ГОЛОВА ЗАЩИЩЕНА · УРОН 8 / 100"
           : "ГОЛОВА УЯЗВИМА";
+    } else if (b.type === "whirl") {
+      $("#bossShieldText").textContent = "ВОЗДУШНЫЙ ФЛАГМАН";
+      $("#bossPhase").textContent = b.dead ? "ПОБЕЖДЁН" : "ОБЫЧНЫЕ БАШНИ: УРОН 50 / 100";
     } else {
       $("#bossShieldText").textContent = "МАГМОВЫЙ СЛЕД · УСКОРЕНИЕ ВРАГОВ";
       $("#bossPhase").textContent = b.dead
@@ -1584,13 +1835,12 @@
     return e;
   }
   function damage(e, raw, t, laser = false, allyHit = false) {
-    if (e.dead) return 0;
-    const efficacy = isElite(e) || allyHit ? 100 : TYPES[t.type].effect[e.type];
+    if (e.dead || !canHit(t, e) || (allyHit && isAir(e))) return 0;
+    const efficacy = allyHit ? 100 : effectFor(t, e);
     const m = mods(t);
-    const cutBoost =
-      t.type === "cut"
-        ? 1 + Math.min(m.woundCap || 2, ((e.cuts?.[t.id] || 0) / e.maxHp) * 4 * (m.wound || 1))
-        : 1;
+    const wound =
+      t.type === "cut" && clock - (e.cutTimes?.[t.id] ?? -100) <= 3 ? e.cuts?.[t.id] || 0 : 0;
+    const cutBoost = t.type === "cut" ? 1 + Math.min(m.woundCap || 0.8, wound) : 1;
     const headGuard = e.type === "asterix" && e.parts?.some((p) => !p.dead) ? 0.08 : 1;
     const scaled =
       headGuard *
@@ -1629,7 +1879,9 @@
     }
     if (t.type === "cut") {
       e.cuts ??= {};
-      e.cuts[t.id] = (e.cuts[t.id] || 0) + actual;
+      e.cuts[t.id] = Math.min(m.woundCap || 0.8, wound + 0.08 * (m.wound || 1));
+      e.cutTimes ??= {};
+      e.cutTimes[t.id] = clock;
     }
     if (e.type === "fighter") e.rage = Math.min(1.8, (e.rage || 0) + (actual / e.maxHp) * 4);
     if (raw >= 2 && !["cut", "summon"].includes(t.type)) e.hit = 0.07;
@@ -1674,7 +1926,7 @@
         max: isBoss(e) ? 1.4 : 0.35,
         r: isBoss(e) ? 85 : 22,
       });
-      if (t.type === "summon" && Math.random() < stat(t).summonChance) summonAlly(t);
+      if (t.type === "summon" && !allyHit && Math.random() < stat(t).summonChance) summonAlly(t);
       if (e.type === "splitter" && !e.fragment) {
         for (let j = 0; j < 2; j++) {
           const child = spawnEnemy("fast", Math.max(0, e.dist - j * 18));
@@ -1702,7 +1954,9 @@
   }
   function pickTarget(t) {
     const s = stat(t),
-      list = state.enemies.filter((e) => !e.dead && Math.hypot(e.x - t.x, e.y - t.y) <= s.range);
+      list = state.enemies.filter(
+        (e) => !e.dead && canHit(t, e) && Math.hypot(e.x - t.x, e.y - t.y) <= s.range,
+      );
     if (!list.length) return null;
     list.sort((a, b) =>
       t.targetMode === 1
@@ -1716,6 +1970,7 @@
     return list[0];
   }
   function fire(t, e) {
+    if (e.dead || !canHit(t, e)) return;
     const v = stat(t);
     t.cool = shotInterval(t, v);
     const m = { x: t.x + Math.cos(t.angle) * 24, y: t.y + Math.sin(t.angle) * 24 };
@@ -1728,7 +1983,20 @@
         life: 0.08,
         max: 0.08,
       });
-    if (t.type === "summon") {
+    if (t.type === "aer") {
+      state.shots.push({
+        type: "aerBullet",
+        x: m.x,
+        y: m.y,
+        target: e,
+        damage: v.damage,
+        tower: t,
+        speed: v.projectile,
+        life: 2,
+        airBurst: Math.random() < 0.02,
+      });
+      audio.effect("laser", t.x / W);
+    } else if (t.type === "summon") {
       damage(e, v.damage * 0.35, t);
       e.bleedTime = 3;
       if (!e.bleedOwner || v.damage * 0.8 * (mods(t).bleed || 1) >= e.bleedDps) {
@@ -1780,7 +2048,11 @@
         power *= v.decay;
         target = state.enemies
           .filter(
-            (a) => !a.dead && !hit.has(a.id) && Math.hypot(a.x - from.x, a.y - from.y) <= v.jump,
+            (a) =>
+              !a.dead &&
+              canHit(t, a) &&
+              !hit.has(a.id) &&
+              Math.hypot(a.x - from.x, a.y - from.y) <= v.jump,
           )
           .sort(
             (a, b) =>
@@ -1791,9 +2063,15 @@
     } else if (t.type === "prism") {
       const tx = t.x + Math.cos(t.angle) * v.range,
         ty = t.y + Math.sin(t.angle) * v.range;
-      for (const a of state.enemies)
-        if (!a.dead && segmentDistance(a.x, a.y, t.x, t.y, tx, ty) <= ET[a.type].r + v.width / 2)
-          damage(a, v.damage, t);
+      const pierced = state.enemies
+        .filter(
+          (a) =>
+            !a.dead &&
+            canHit(t, a) &&
+            segmentDistance(a.x, a.y, t.x, t.y, tx, ty) <= ET[a.type].r + v.width / 2,
+        )
+        .sort((a, b) => Math.hypot(a.x - t.x, a.y - t.y) - Math.hypot(b.x - t.x, b.y - t.y));
+      pierced.forEach((a, i) => damage(a, v.damage * Math.max(0.55, 0.82 ** i), t));
       state.fx.push({
         type: "prismBeam",
         x: t.x,
@@ -1808,7 +2086,7 @@
       audio.effect("laser", t.x / W);
     } else if (t.type === "pulse") {
       for (const a of state.enemies)
-        if (!a.dead && Math.hypot(a.x - t.x, a.y - t.y) <= v.range) {
+        if (!a.dead && canHit(t, a) && Math.hypot(a.x - t.x, a.y - t.y) <= v.range) {
           damage(a, v.damage, t);
           applySlow(a, 0.2, 1);
           if (mods(t).shock) freezeEnemy(a, 0.45);
@@ -1874,7 +2152,10 @@
     } else if (t.type === "splash" || t.type === "pyro" || t.type === "mortar") {
       if (t.type === "pyro" && t.burstLeft <= 0) t.burstLeft = v.burst;
       const duration = Math.hypot(e.x - t.x, e.y - t.y) / v.projectile,
-        p = posAt(e.dist + enemySpeed(e) * duration);
+        p =
+          e.type === "drone"
+            ? { x: e.x + (e.vx || 0) * duration, y: e.y + (e.vy || 0) * duration }
+            : posAt(e.dist + enemySpeed(e) * duration);
       state.shots.push({
         type: t.type === "pyro" ? "firework" : t.type === "mortar" ? "shell" : "bomb",
         x: m.x,
@@ -2000,6 +2281,7 @@
       (1 + (e.rage || 0)) *
       (state.lava.some((l) => Math.abs(l.dist - e.dist) < 65) && !isBoss(e) ? 1.35 : 1) *
       (e.type === "sprinter" && (e.dashCycle || 0) < 1 ? 1.9 : 1) *
+      (e.type === "gust" && (e.dashCycle || 0) < 0.75 ? 1.85 : 1) *
       (1 - (isBoss(e) ? Math.min(0.25, slow) : slow))
     );
   }
@@ -2018,14 +2300,33 @@
     return true;
   }
   function projectileHit(p, e) {
+    if (!canHit(p.tower, e)) return;
+    if (p.type === "aerBullet" && p.airBurst) {
+      const m = mods(p.tower),
+        area = 52 * (m.area || 1);
+      for (const a of state.enemies)
+        if (!a.dead && canHit(p.tower, a) && Math.hypot(a.x - e.x, a.y - e.y) <= area)
+          damage(a, p.damage * 1.4 * (m.airBlast || 1), p.tower);
+      state.fx.push({
+        type: "blast",
+        x: e.x,
+        y: e.y,
+        r: area,
+        color: "#9bedff",
+        life: 0.42,
+        max: 0.42,
+      });
+      audio.effect("crystal", e.x / W);
+      return;
+    }
     damage(e, p.damage, p.tower, p.type === "laser");
     if (e.dead) return;
     if (p.type === "acid") {
       const v = stat(p.tower);
       e.acidTime = 4;
       e.corrosion = Math.max(e.corrosion || 0, v.corrosion);
-      if (!e.acidOwner || p.damage * 0.65 * v.poison >= e.acidDps) {
-        e.acidDps = p.damage * 0.65 * v.poison;
+      if (!e.acidOwner || p.damage * 0.6 * v.poison >= e.acidDps) {
+        e.acidDps = p.damage * 0.6 * v.poison;
         e.acidOwner = p.tower;
       }
     }
@@ -2094,6 +2395,7 @@
     for (const e of state.enemies)
       if (
         !e.dead &&
+        canHit(p.tower, e) &&
         !hits.has(e.id) &&
         segmentDistance(e.x, e.y, ax, ay, p.x, p.y) <= ET[e.type].r + 7
       ) {
@@ -2158,19 +2460,14 @@
     updateWorld(dt);
     for (const e of state.enemies) {
       if (e.dead) continue;
-      if (e.type === "asterPart" && e.head) {
-        if (e.head.dead) {
-          e.dead = true;
-          continue;
-        }
-        e.dist = Math.max(0, e.head.dist - e.segment * 38);
-        Object.assign(e, posAt(e.dist));
-        continue;
-      }
       if (e.bleedTime > 0 && e.bleedOwner) {
         const time = Math.min(dt, e.bleedTime);
         e.bleedTime -= time;
         damage(e, e.bleedDps * time, e.bleedOwner);
+        if (e.bleedTime <= 0) {
+          e.bleedOwner = null;
+          e.bleedDps = 0;
+        }
         if (e.dead) continue;
       }
       e.windImmunity = Math.max(0, (e.windImmunity || 0) - dt);
@@ -2203,7 +2500,7 @@
           });
         }
       }
-      if (e.type === "sprinter") {
+      if (e.type === "sprinter" || e.type === "gust") {
         e.dashCycle = (e.dashCycle || 0) + dt;
         if (e.dashCycle >= 5) e.dashCycle -= 5;
       }
@@ -2229,6 +2526,20 @@
       e.slowTime = Math.max(0, (e.slowTime || 0) - dt);
       if (!e.slowTime) e.slow = 0;
       e.rage = Math.max(0, (e.rage || 0) - dt * 0.06);
+      if (e.type === "asterPart" && e.head) {
+        if (e.head.dead) {
+          e.dead = true;
+          continue;
+        }
+        e.dist = Math.max(0, e.head.dist - e.segment * 38);
+        Object.assign(e, posAt(e.dist));
+        continue;
+      }
+      e.airTime = Math.max(0, (e.airTime || 0) - dt);
+      if (e.type === "drone") {
+        updateDrone(e, dt);
+        continue;
+      }
       e.moveStep = enemySpeed(e) * dt;
       e.dist += e.moveStep;
       Object.assign(e, posAt(e.dist));
@@ -2252,6 +2563,7 @@
     for (const t of state.towers) {
       t.stun = Math.max(0, (t.stun || 0) - dt);
       t.magmaTime = Math.max(0, (t.magmaTime || 0) - dt);
+      t.suppressed = Math.max(0, (t.suppressed || 0) - dt);
       if (t.frozen || t.stun > 0) {
         t.spin = Math.max(0, (t.spin || 0) - dt * 0.2);
         continue;
@@ -2299,7 +2611,11 @@
         Object.assign(p, posAt(p.dist));
         if (p.life <= 0) continue;
         for (const a of state.enemies)
-          if (!a.dead && Math.hypot(a.x - p.x, a.y - p.y) <= p.r + ET[a.type].r) {
+          if (
+            !a.dead &&
+            canHit(p.tower, a) &&
+            Math.hypot(a.x - p.x, a.y - p.y) <= p.r + ET[a.type].r
+          ) {
             const previous = windHits.get(a);
             if (
               !previous ||
@@ -2310,7 +2626,7 @@
           }
       } else if (p.type === "boomerang") {
         moveBoomerang(p, dt);
-      } else if (p.type === "magmaOrb") {
+      } else if (p.type === "magmaOrb" || p.type === "airBomb") {
         p.life -= dt;
         p.age += dt;
         const k = Math.min(1, p.age / p.duration);
@@ -2318,14 +2634,16 @@
         p.y = p.sy + (p.ty - p.sy) * k - Math.sin(k * Math.PI) * 65;
         if (k >= 1) {
           for (const t of state.towers)
-            if (Math.hypot(t.x - p.tx, t.y - p.ty) < 65)
-              t.magmaTime = Math.max(t.magmaTime || 0, 6);
+            if (Math.hypot(t.x - p.tx, t.y - p.ty) < 65) {
+              if (p.type === "airBomb") t.stun = Math.max(t.stun || 0, p.stun || 2.2);
+              else t.magmaTime = Math.max(t.magmaTime || 0, 6);
+            }
           state.fx.push({
             type: "blast",
             x: p.tx,
             y: p.ty,
             r: 65,
-            color: "#ff904c",
+            color: p.type === "airBomb" ? "#92ddff" : "#ff904c",
             life: 0.6,
             max: 0.6,
           });
@@ -2366,7 +2684,7 @@
         p.y = p.sy + (p.ty - p.sy) * k - Math.sin(k * Math.PI) * 30;
         if (k >= 1) {
           for (const e of state.enemies) {
-            if (!e.dead && Math.hypot(e.x - p.tx, e.y - p.ty) <= p.area) {
+            if (!e.dead && canHit(p.tower, e) && Math.hypot(e.x - p.tx, e.y - p.ty) <= p.area) {
               const extra = p.type === "firework" && !isBoss(e) ? e.maxHp * p.percent : 0;
               damage(e, p.damage + extra, p.tower);
               if (p.type === "firework") applySlow(e, p.slow, 2.5);
@@ -2389,7 +2707,7 @@
         }
       } else {
         p.life -= dt;
-        if (p.target.dead) {
+        if (p.target.dead || !canHit(p.tower, p.target)) {
           p.dead = true;
           continue;
         }
@@ -2515,6 +2833,15 @@
         ctx.arc(t.x, t.y, 25, 0, TAU * Math.min(1, t.magmaTime / 6));
         ctx.stroke();
       }
+      if (t.suppressed > 0) {
+        ctx.strokeStyle = "#8cddff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(t.x - 15, t.y - 28);
+        ctx.lineTo(t.x, t.y - 19);
+        ctx.lineTo(t.x + 15, t.y - 28);
+        ctx.stroke();
+      }
       if (t.jammed) {
         ctx.lineWidth = 1.4;
         ctx.strokeStyle = "#d69bb9";
@@ -2548,6 +2875,10 @@
     ctx.restore();
   }
   function drawEnemy(e) {
+    if (["helicopter", "gust", "drone", "whirl"].includes(e.type)) {
+      drawAirEnemy(e);
+      return;
+    }
     const b = ET[e.type];
     if (e.type !== "boss" && isElite(e) && e.type !== "minion") {
       drawSectorEnemy(e);
@@ -2645,7 +2976,7 @@
           ctx.lineTo(-5, 3);
           ctx.closePath();
         }
-        if (e.type === "sprinter") {
+        if (e.type === "sprinter" || e.type === "gust") {
           ctx.moveTo(-4, -4);
           ctx.lineTo(2, 0);
           ctx.lineTo(-4, 4);
@@ -2713,6 +3044,23 @@
     }
   }
   function drawStatus(e) {
+    if ((e.airTime || 0) > 0) {
+      ctx.strokeStyle = "#b2eeff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(e.x - 24, e.y + 3);
+      ctx.lineTo(e.x - 14, e.y - 7);
+      ctx.lineTo(e.x - 7, e.y + 2);
+      ctx.moveTo(e.x + 24, e.y + 3);
+      ctx.lineTo(e.x + 14, e.y - 7);
+      ctx.lineTo(e.x + 7, e.y + 2);
+      ctx.stroke();
+      ctx.setLineDash([3, 4]);
+      ctx.beginPath();
+      ctx.ellipse(e.x, e.y + 18, 22, 7, 0, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
     const r = ET[e.type].r + 5;
     if (e.freezeTime > 0) {
       ctx.save();
@@ -2746,9 +3094,20 @@
   }
 
   function drawNewProjectile(p) {
+    if (p.type === "aerBullet") {
+      ctx.fillStyle = "#a4f1ff";
+      ctx.shadowColor = "#42c9ff";
+      ctx.shadowBlur = 7;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3.4, 0, TAU);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      return true;
+    }
     if (
       ![
         "magmaOrb",
+        "airBomb",
         "hurricane",
         "acid",
         "vortex",
@@ -2822,12 +3181,12 @@
         ctx.arc(3, 0, 9 + i * 2, 0, Math.PI * 1.4);
         ctx.stroke();
       }
-    } else if (p.type === "magmaOrb") {
-      ctx.fillStyle = "#ff6d36";
+    } else if (p.type === "magmaOrb" || p.type === "airBomb") {
+      ctx.fillStyle = p.type === "airBomb" ? "#57b1df" : "#ff6d36";
       ctx.beginPath();
       ctx.arc(0, 0, 12, 0, TAU);
       ctx.fill();
-      ctx.fillStyle = "#ffe0a1";
+      ctx.fillStyle = p.type === "airBomb" ? "#d5f6ff" : "#ffe0a1";
       ctx.beginPath();
       ctx.arc(-3, -3, 6, 0, TAU);
       ctx.fill();
@@ -2886,46 +3245,14 @@
       D * (camera.height / 2 - camera.y * s),
     );
     drawSectorBackdrop();
-    ctx.lineCap = "square";
-    ctx.lineJoin = "miter";
-    ctx.beginPath();
-    points.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-    ctx.strokeStyle = currentLevel.road;
-    ctx.lineWidth = 51;
-    ctx.stroke();
-    ctx.fillStyle = "#535350";
-    for (const seg of segments) {
-      const n = Math.round(seg.len / C);
-      for (let j = 0; j < n; j++) {
-        const x = seg.a.x + ((seg.b.x - seg.a.x) * (j + 0.5)) / n,
-          y = seg.a.y + ((seg.b.y - seg.a.y) * (j + 0.5)) / n;
-        ctx.fillRect(x - 1, y - 1, 2, 2);
-      }
-    }
+    drawSectorRoad();
     const st = selectedTower();
     drawSectorWorld();
     for (const p of platforms) {
       if (p.destroyed) continue;
       const sel =
         (selected?.kind === "platform" && selected.p === p) || (st?.c === p.c && st?.r === p.r);
-      ctx.fillStyle = "#101010";
-      ctx.fillRect(p.x - 26, p.y - 25, 52, 53);
-      ctx.fillStyle = sel ? "#4b544d" : hover === p ? "#474747" : "#333";
-      ctx.fillRect(p.x - 24, p.y - 24, 48, 48);
-      ctx.fillStyle = "#414141";
-      ctx.beginPath();
-      ctx.moveTo(p.x - 24, p.y - 24);
-      ctx.lineTo(p.x + 24, p.y - 24);
-      ctx.lineTo(p.x + 20, p.y - 20);
-      ctx.lineTo(p.x - 20, p.y - 20);
-      ctx.lineTo(p.x - 20, p.y + 20);
-      ctx.lineTo(p.x - 24, p.y + 24);
-      ctx.fill();
-      if (sel) {
-        ctx.strokeStyle = "#eee";
-        ctx.lineWidth = 1.2;
-        ctx.strokeRect(p.x - 26, p.y - 26, 52, 52);
-      }
+      drawBuildSocket(p, sel);
     }
     let rt = st;
     if (!rt && buildType) {
@@ -3477,7 +3804,10 @@
       const targets = state.enemies
         .filter(
           (e) =>
-            !e.dead && e.dist >= a.dist - ET[e.type].r - 10 && e.dist <= old + ET[e.type].r + 10,
+            !e.dead &&
+            !isAir(e) &&
+            e.dist >= a.dist - ET[e.type].r - 10 &&
+            e.dist <= old + ET[e.type].r + 10,
         )
         .sort((a, b) => b.dist - a.dist);
       if (targets.length) {
@@ -3514,6 +3844,10 @@
     toast("Космо стёр платформу · восстановление только в новом забеге");
   }
   function sectorBossAction(b, dt) {
+    if (b.type === "whirl") {
+      airBossAction(b, dt);
+      return;
+    }
     if (b.type === "magma") {
       b.trailTimer -= dt;
       b.abilityTimer -= dt;
@@ -3558,7 +3892,7 @@
         b.healTimer = 6;
         for (const e of state.enemies)
           if (!e.dead && Math.hypot(e.x - b.x, e.y - b.y) < 260)
-            e.hp = Math.min(e.maxHp, e.hp + e.maxHp * (e === b ? 0.02 : 0.05));
+            e.hp = Math.min(e.maxHp, e.hp + e.maxHp * (e === b ? 0.02 : 0.04));
         state.fx.push({ type: "sonic", x: b.x, y: b.y, r: 260, color: "#94e6bd", life: 1, max: 1 });
         audio.effect("sonic", b.x / W);
       }
@@ -3570,10 +3904,10 @@
         const owned = state.portals.filter((p) => p.owner === b),
           core = points.at(-1),
           choices = [];
-        for (let d = pathLength * 0.15; d < pathLength - C * 7; d += C * 2) {
+        for (let d = pathLength * 0.15; d < pathLength - C * 10; d += C * 2) {
           const p = posAt(d);
           if (
-            Math.hypot(p.x - core.x, p.y - core.y) >= C * 5 &&
+            Math.hypot(p.x - core.x, p.y - core.y) >= C * 6 &&
             !owned.some((o) => Math.abs(o.dist - d) < C * 3)
           )
             choices.push({ dist: d, ...p });
@@ -3595,7 +3929,7 @@
         }
       }
       if (b.eraseTimer <= 0) {
-        b.eraseTimer = b.layersLeft === 1 ? 10 : 14;
+        b.eraseTimer = b.layersLeft === 1 ? 14 : 18;
         let choices = platforms.filter(
           (p) =>
             !p.destroyed &&
@@ -3608,10 +3942,223 @@
             (towerAt(c) ? 100 : 0) -
             ((towerAt(a)?.bossDamage || 0) + (towerAt(a) ? 100 : 0)),
         );
-        if (choices.length) state.hazards.push({ p: choices[0], owner: b, life: 2.4, max: 2.4 });
+        if (choices.length) state.hazards.push({ p: choices[0], owner: b, life: 3, max: 3 });
       }
     }
   }
+  function dropAirBomb(owner, t, stun = 2.2) {
+    state.shots.push({
+      type: "airBomb",
+      x: owner.x,
+      y: owner.y,
+      sx: owner.x,
+      sy: owner.y,
+      tx: t.x,
+      ty: t.y,
+      target: t,
+      age: 0,
+      duration: 1,
+      life: 1.1,
+      owner,
+      stun,
+    });
+    t.bombIncoming = clock + 1.15;
+  }
+  function updateDrone(e, dt) {
+    e.bombCooldown = Math.max(0, (e.bombCooldown || 0) - dt);
+    const core = points.at(-1),
+      portal = points[0],
+      returning = (e.sorties || 0) >= 3;
+    const available = state.towers.filter(
+      (t) => !t.frozen && !t.destroyed && !(t.stun > 0) && !(t.bombIncoming > clock),
+    );
+    const target = available.sort(
+      (a, b) => Math.hypot(a.x - e.x, a.y - e.y) - Math.hypot(b.x - e.x, b.y - e.y),
+    )[0];
+    let destination = returning
+      ? { x: portal.x - 90, y: portal.y - 70 }
+      : target
+        ? { x: target.x, y: target.y - 42 }
+        : state.towers.length
+          ? { x: e.x + Math.cos(clock + e.id) * 30, y: e.y + Math.sin(clock + e.id) * 30 }
+          : core;
+    const dx = destination.x - e.x,
+      dy = destination.y - e.y,
+      d = Math.hypot(dx, dy),
+      step = Math.min(d, enemySpeed(e) * dt);
+    e.vx = d > 0.001 ? (dx / d) * enemySpeed(e) : 0;
+    e.vy = d > 0.001 ? (dy / d) * enemySpeed(e) : 0;
+    e.x += d > 0.001 ? (dx / d) * step : 0;
+    e.y += d > 0.001 ? (dy / d) * step : 0;
+    e.angle = Math.atan2(dy, dx);
+    e.dist = Math.max(0, pathLength - Math.hypot(e.x - core.x, e.y - core.y));
+    if (returning && d < 15) {
+      e.dead = true;
+      return;
+    }
+    if (target && !returning && d < 34 && e.bombCooldown <= 0) {
+      dropAirBomb(e, target);
+      e.bombCooldown = 4.5;
+      e.sorties = (e.sorties || 0) + 1;
+      audio.effect("cannon", e.x / W);
+    }
+    if (!returning && !state.towers.length && Math.hypot(e.x - core.x, e.y - core.y) < 18) {
+      e.dead = true;
+      state.hp = Math.max(0, state.hp - 1);
+      if (state.hp <= 0) end(false);
+    }
+  }
+  function airBossAction(b, dt) {
+    b.abilityTimer -= dt;
+    b.volley -= dt;
+    b.liftTimer = (b.liftTimer ?? 7) - dt;
+    const targets = state.towers
+      .filter((t) => !t.frozen && Math.hypot(t.x - b.x, t.y - b.y) < 340)
+      .sort((a, c) => (c.bossDamage || 0) - (a.bossDamage || 0));
+    if (b.abilityTimer <= 0) {
+      b.abilityTimer = 8;
+      for (const t of targets.slice(0, b.hp < b.maxHp / 2 ? 2 : 1)) dropAirBomb(b, t);
+    }
+    if (b.volley <= 0) {
+      b.volley = 5;
+      const t = targets[0];
+      if (t) {
+        t.suppressed = 3.5;
+        for (let i = 0; i < 3; i++)
+          state.fx.push({
+            type: "beam",
+            x: b.x - 14 + i * 14,
+            y: b.y,
+            tx: t.x - 8 + i * 8,
+            ty: t.y,
+            color: "#b4edff",
+            life: 0.32 + i * 0.1,
+            max: 0.52,
+          });
+        audio.effect("machine", b.x / W);
+      }
+    }
+    if (b.liftTimer <= 0) {
+      b.liftTimer = 11;
+      const lifted = state.enemies
+        .filter((e) => !e.dead && !isBoss(e) && !isAir(e) && Math.hypot(e.x - b.x, e.y - b.y) < 210)
+        .sort((a, c) => Math.hypot(a.x - b.x, a.y - b.y) - Math.hypot(c.x - b.x, c.y - b.y))
+        .slice(0, 6);
+      for (const e of lifted) e.airTime = 5.5;
+      state.fx.push({
+        type: "sonic",
+        x: b.x,
+        y: b.y,
+        r: 210,
+        color: "#9eeaff",
+        life: 0.8,
+        max: 0.8,
+      });
+      if (lifted.length) toast("Вихрь поднял врагов в воздух · Аэр / Пиротехник");
+    }
+  }
+  function drawAirEnemy(e) {
+    const b = ET[e.type],
+      r = b.r,
+      large = e.type === "whirl";
+    ctx.save();
+    ctx.fillStyle = "#07121e60";
+    ctx.beginPath();
+    ctx.ellipse(e.x + 7, e.y + 17, r * 1.05, r * 0.37, 0, 0, TAU);
+    ctx.fill();
+    ctx.translate(e.x, e.y + Math.sin(clock * 4 + e.id) * 2);
+    ctx.rotate(e.angle || 0);
+    if (e.type === "gust") {
+      ctx.fillStyle = e.hit > 0 ? "#fff" : "#e3faff";
+      ctx.beginPath();
+      ctx.moveTo(19, 0);
+      ctx.lineTo(-14, -12);
+      ctx.lineTo(-7, 0);
+      ctx.lineTo(-14, 12);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#5fcaed";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-23, -9);
+      ctx.lineTo(-10, -4);
+      ctx.moveTo(-25, 9);
+      ctx.lineTo(-11, 4);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle =
+        e.hit > 0 ? "#fff" : large ? "#376881" : e.type === "drone" ? "#376a87" : "#547f94";
+      ctx.strokeStyle = "#b1efff";
+      ctx.lineWidth = large ? 2 : 1.2;
+      ctx.beginPath();
+      ctx.moveTo(r, 0);
+      ctx.lineTo(r * 0.2, -r * 0.43);
+      ctx.lineTo(-r * 0.7, -r * 0.4);
+      ctx.lineTo(-r * 0.95, 0);
+      ctx.lineTo(-r * 0.7, r * 0.4);
+      ctx.lineTo(r * 0.2, r * 0.43);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#99e5ff";
+      ctx.beginPath();
+      ctx.ellipse(r * 0.4, 0, r * 0.33, r * 0.23, 0, 0, TAU);
+      ctx.fill();
+      const arms = large ? [-0.65, 0.65] : e.type === "drone" ? [-0.7, 0.7] : [0];
+      for (const ax of arms) {
+        const x = ax * r;
+        ctx.strokeStyle = "#5ea3bd";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x, -r * 0.9);
+        ctx.lineTo(x, r * 0.9);
+        ctx.stroke();
+        for (const yy of [-r * 0.85, r * 0.85]) {
+          if (e.type === "helicopter" && yy > 0) continue;
+          ctx.save();
+          ctx.translate(x, yy);
+          ctx.rotate(clock * (large ? 26 : 38) + ax);
+          ctx.strokeStyle = "#c9f5ff";
+          ctx.lineWidth = large ? 3 : 2;
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.55, 0);
+          ctx.lineTo(r * 0.55, 0);
+          ctx.moveTo(0, -r * 0.38);
+          ctx.lineTo(0, r * 0.38);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+      if (e.type === "helicopter") {
+        ctx.strokeStyle = "#b1deeb";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.6, 0);
+        ctx.lineTo(-r * 1.6, 0);
+        ctx.moveTo(-r * 1.5, -6);
+        ctx.lineTo(-r * 1.5, 6);
+        ctx.stroke();
+      }
+      if (large) {
+        ctx.strokeStyle = "#70d9ff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.3, -clock * 2, -clock * 2 + Math.PI * 1.6);
+        ctx.stroke();
+        ctx.fillStyle = "#c3efff";
+        ctx.fillRect(-r * 0.4, -r * 0.6, r * 0.9, 4);
+        ctx.fillRect(-r * 0.4, r * 0.5, r * 0.9, 4);
+      }
+    }
+    ctx.restore();
+    if (e.hp < e.maxHp) {
+      ctx.fillStyle = "#0b151d";
+      ctx.fillRect(e.x - 18, e.y - r - 15, 36, 3);
+      ctx.fillStyle = "#a8eaff";
+      ctx.fillRect(e.x - 18, e.y - r - 15, 36 * Math.max(0, e.hp / e.maxHp), 3);
+    }
+  }
+
   function updateWorld(dt) {
     for (const l of state.lava) l.life -= dt;
     state.lava = state.lava.filter((l) => l.life > 0);
@@ -3619,7 +4166,7 @@
       p.life -= dt;
       p.spawn -= dt;
       if (p.life > 0 && p.spawn <= 0 && !p.owner.dead && state.enemies.length < 240) {
-        p.spawn = 3;
+        p.spawn = 4;
         const e = spawnEnemy("cosmicMinion", p.dist);
         state.summoned++;
       }
@@ -3655,40 +4202,67 @@
       ctx.fillRect(a.x - 11, a.y - 19, (22 * a.hp) / a.maxHp, 2);
     }
   }
-  function drawSectorBackdrop() {
-    if (levelIndex === 0) return;
+  function drawSectorRoad() {
     ctx.save();
-    ctx.lineWidth = 0.5;
-    ctx.strokeStyle = currentLevel.color + "09";
-    for (let x = 0; x < W; x += C) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, H);
-      ctx.stroke();
-    }
-    for (let y = 0; y < H; y += C) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(W, y);
-      ctx.stroke();
-    }
-    if (levelIndex === 3) {
-      for (let i = 0; i < 110; i++) {
-        const x = (i * 173 + 71) % W,
-          y = (i * i * 37 + 59) % H;
-        ctx.fillStyle = i % 5 ? "#b5a9d737" : "#e7d4ff80";
-        ctx.fillRect(x, y, i % 5 ? 1 : 2, i % 5 ? 1 : 2);
+    const tiles = new Set();
+    for (const seg of segments) {
+      const n = Math.round(seg.len / C);
+      for (let j = 0; j <= n; j++) {
+        const x = seg.a.x + ((seg.b.x - seg.a.x) * j) / n,
+          y = seg.a.y + ((seg.b.y - seg.a.y) * j) / n;
+        tiles.add(`${Math.round((x - C / 2) / C)},${Math.round((y - C / 2) / C)}`);
       }
-    } else
-      for (let i = 0; i < 30; i++) {
-        const x = (i * 191 + 30) % W,
-          y = (i * i * 73 + 30) % H;
-        ctx.fillStyle = currentLevel.color + "08";
-        polygon(x, y, levelIndex === 1 ? 5 : 6, 14 + (i % 18), i * 0.6);
-        ctx.fill();
-      }
+    }
+    // Square tiles, no rounded corners, diagonal edges, cracks or ornamental rails.
+    for (const key of tiles) {
+      const [c, r] = key.split(",").map(Number),
+        x = c * C,
+        y = r * C;
+      ctx.fillStyle = currentLevel.road;
+      ctx.fillRect(x, y, C, C);
+      ctx.strokeStyle = currentLevel.bg + "55";
+      ctx.lineWidth = 0.7;
+      ctx.strokeRect(x + 0.5, y + 0.5, C - 1, C - 1);
+    }
     ctx.restore();
   }
+  function drawBuildSocket(p, sel) {
+    ctx.save();
+    const palettes = [
+      ["#34434c", "#52636e"],
+      ["#453a2d", "#79674e"],
+      ["#2e4238", "#55725e"],
+      ["#363044", "#685b80"],
+      ["#2f4857", "#5d8092"],
+    ];
+    const [base, edge] = palettes[levelIndex],
+      active = sel || hover === p;
+    ctx.fillStyle = "#0e1216";
+    ctx.fillRect(p.x - 26, p.y - 26, 52, 52);
+    ctx.fillStyle = active ? edge : base;
+    ctx.fillRect(p.x - 23, p.y - 23, 46, 46);
+    ctx.strokeStyle = p.air ? "#8bdfff" : edge;
+    ctx.lineWidth = p.air ? 1.8 : 1;
+    ctx.strokeRect(p.x - 23, p.y - 23, 46, 46);
+    if (!towerAt(p)) {
+      ctx.fillStyle = currentLevel.color + "65";
+      ctx.fillRect(p.x - 3, p.y - 1, 6, 2);
+      ctx.fillRect(p.x - 1, p.y - 3, 2, 6);
+    }
+    if (p.air) {
+      ctx.fillStyle = "#a3e5ff";
+      ctx.font = "13px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("↑", p.x, p.y + 20);
+    }
+    if (sel) {
+      ctx.strokeStyle = "#eef6fa";
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(p.x - 28, p.y - 28, 56, 56);
+    }
+    ctx.restore();
+  }
+  function drawSectorBackdrop() {}
   function drawSectorWorld() {
     ctx.save();
     ctx.lineCap = "round";
@@ -3704,6 +4278,15 @@
       ctx.moveTo(p.x + 9, p.y - 9);
       ctx.lineTo(p.x - 9, p.y + 9);
       ctx.stroke();
+    }
+    for (const bomb of state.shots.filter((p) => p.type === "airBomb")) {
+      ctx.strokeStyle = "#a4e5ff";
+      ctx.lineWidth = 1.3;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.arc(bomb.tx, bomb.ty, 25 + 3 * Math.sin(clock * 14), 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
     for (const l of state.lava) {
       ctx.globalAlpha = Math.min(0.65, l.life / 3);
@@ -3866,22 +4449,13 @@
     }
   }
   function bossBrief() {
-    const desc = {
-      boss: "Сетка: 16000 HP, защита 60%. Здоровье: 22000 HP, защита 30%. Луч выбирает опаснейшую и ближайшую башни. После разрушения сетки — ярость ядра: луч и призыв каждые 8 с. Миньоны: 1200 HP.",
-      magma:
-        "32000 HP, защита 38%. Метает магму в башни: 6 с урона −30% и скорости атаки −45%. След лавы живёт 10 с и ускоряет врагов на 35%. Каждые 13 с призывает двух миньонов: 6500 HP, скорость 23, защита 35%.",
-      asterix:
-        "10 частей: голова 18000 HP и 9 сегментов по 2400 HP. Пока жив хотя бы один сегмент хвоста, голова получает только 8% урона. Части — самостоятельные цели. Каждые 6 с лечит союзников в радиусе 4,6 клетки: 5% HP; себе восстанавливает 2%.",
-      cosmo:
-        "Три последовательные оболочки по 18000 HP, защита 35%. Открывает порталы на дороге: не ближе 5 клеток к ядру и с запасом пути не меньше 7 клеток. Разломы живут 22 с и выпускают врагов раз в 3 с. Стирание платформы отмечается за 2,4 с: башня на ней тоже исчезает, без возврата монет. На последней оболочке способности ускоряются.",
-    };
-    return `<b>40-я волна · ${ET[currentLevel.boss].name}</b><p>${desc[currentLevel.boss]}</p><p>Пропуск босса означает поражение. По боссам и миньонам эффективность всегда 100; процентный урон Пиротехника по боссам отключён. Замедление босса не выше 25%, заморозка до 0,5 с с иммунитетом 6 с; снятие защиты не выше 12 п.п.</p>`;
+    return `<b>40-я волна · ${ET[currentLevel.boss].name}</b><p class="boss-lore">${BOSS_LORE[currentLevel.boss]}</p>`;
   }
   function renderLevelCards() {
     $("#closeLevels").style.visibility = levelChosen ? "visible" : "hidden";
     $("#levelCards").innerHTML = LEVELS.map(
       (l, i) =>
-        `<button class="level-card" data-level="${i}" style="--sector:${l.color}"><span class="sector-number">СЕКТОР 0${i + 1}</span><canvas width="248" height="152" aria-label="Карта ${l.name}"></canvas><h2>${l.name}</h2><p>${l.subtitle}</p><div class="sector-boss">${sprites.enemyIcon(l.boss)}<div><b>${ET[l.boss].name}</b><small>Финальный босс · волна 40</small></div></div><span class="sector-enter">${l.track}<span>→</span></span><small class="track-style">${l.style}</small></button>`,
+        `<button class="level-card" data-level="${i}" style="--sector:${l.color}"><span class="sector-number">СЕКТОР 0${i + 1}</span><canvas width="248" height="152" aria-label="Карта ${l.name}"></canvas><h2>${l.name}</h2><p>${l.subtitle}<br><span style="color:var(--sector)">${l.pads.length} платформ для строительства</span></p><div class="sector-boss" title="${BOSS_LORE[l.boss]}">${sprites.enemyIcon(l.boss)}<div><b>${ET[l.boss].name}</b><small>Финальный босс · волна 40</small></div></div><span class="sector-enter">Выбрать карту <span>→</span></span></button>`,
     ).join("");
     $$(".level-card").forEach((button, i) => {
       const l = LEVELS[i],
@@ -3893,6 +4467,7 @@
       g.fillStyle = l.bg;
       g.fillRect(0, 0, 248, 152);
       g.lineJoin = "miter";
+      g.lineCap = "square";
       g.lineWidth = 6;
       g.strokeStyle = l.road;
       g.beginPath();
@@ -3902,6 +4477,10 @@
         j ? g.lineTo(X, Y) : g.moveTo(X, Y);
       });
       g.stroke();
+      for (const [x, y] of l.pads) {
+        g.fillStyle = l.color + "90";
+        g.fillRect(ox + (x * C + C / 2) * scale - 1.5, oy + (y * C + C / 2) * scale - 1.5, 3, 3);
+      }
       for (const [[x, y], color] of [
         [l.route[0], "#b5a1f0"],
         [l.route.at(-1), "#87e5ee"],
@@ -3953,6 +4532,8 @@
       t.boomAway = false;
       t.magmaTime = 0;
       t.stun = 0;
+      t.suppressed = 0;
+      t.bombIncoming = 0;
     }
     $("#endModal").close();
     selected = null;
@@ -4028,7 +4609,7 @@
       e.shieldDefense = e.defense;
       if (e.parts)
         for (const p of e.parts) {
-          p.hp = p.maxHp = Math.max(1, e.maxHp / 7.5);
+          p.hp = p.maxHp = Math.max(1, (e.maxHp * ET.asterPart.hp) / ET.asterix.hp);
           p.speed = e.speed;
         }
     }
@@ -4096,6 +4677,8 @@
         burstLeft: t.burstLeft,
         spin: t.spin,
         damageDone: t.damageDone,
+        airPlatform: t.airPlatform,
+        suppressed: t.suppressed || 0,
         stats: stat(t),
         spent: t.spent,
       })),
@@ -4123,6 +4706,12 @@
         fit: camera.fit,
       },
       platforms: platformCoords,
+      platformDetails: platforms.map((p) => ({
+        c: p.c,
+        r: p.r,
+        air: p.air,
+        destroyed: p.destroyed,
+      })),
       towerOrder: [...TOWER_ORDER],
       prices: Object.fromEntries(TOWER_ORDER.map((type) => [type, TYPES[type].price])),
       waves: WAVES.map((w) => ({ n: w.n, counts: w.counts, hp: w.hp, total: w.queue.length })),
